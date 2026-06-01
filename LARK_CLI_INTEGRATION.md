@@ -65,3 +65,16 @@ lark-cli base +dashboard-block-create --base-token <base_token> --dashboard-id <
 ```
 
 Then inspect if API/CLI has a custom page/block type in current Lark tenant. If not, deploy repo and register/embed through Lark Base UI.
+
+## Standalone preview support added
+The app now accepts `?url=<encoded_url>` when running outside Lark dashboard config mode.
+
+Local test:
+
+```bash
+pnpm exec vite preview --host 127.0.0.1 --port 4173
+# open:
+http://127.0.0.1:4173/?url=https%3A%2F%2Fexample.com
+```
+
+This makes it easier for CLI/deploy automation to produce a ready-to-preview URL even before Lark custom page registration is automated.
