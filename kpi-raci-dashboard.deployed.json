@@ -1,0 +1,36 @@
+{
+  "baseToken": "HdqfbQnYgaNmOJsDJNdlKVmCg4c",
+  "dashboardId": "blkl1YNXozKlOahj",
+  "name": "KPI & RACI Governance Dashboard",
+  "tables": {
+    "KPI Dictionary": "tblPqY7K57UEAmmk",
+    "RACI Matrix": "tblP4fshc01av8ap"
+  },
+  "blocks": [
+    {
+      "name": "Hướng dẫn cấu trúc KPI/RACI",
+      "type": "text",
+      "blockId": "chtlg0yNpn53amhXD3fRKSCSZid"
+    },
+    {
+      "name": "Tổng số KPI",
+      "type": "statistics",
+      "blockId": "chtlg6KInavJPVwihXfzCCnR6ah"
+    },
+    {
+      "name": "KPI theo trạng thái",
+      "type": "pie",
+      "blockId": "chtlgYkY8yyKzEJ4OZepY7umO8e"
+    },
+    {
+      "name": "Kết quả theo nhóm KPI",
+      "type": "column",
+      "blockId": "chtlglRHA8ZBbXA6Sy4pQQEr9BX"
+    },
+    {
+      "name": "RACI theo Accountable",
+      "type": "bar",
+      "blockId": "chtlgsTXx0ijXvhlOlnWZECI4tb"
+    }
+  ]
+}
