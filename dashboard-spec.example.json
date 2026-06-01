@@ -1,0 +1,13 @@
+{
+  "baseToken": "HdqfbQnYgaNmOJsDJNdlKVmCg4c",
+  "name": "Dashboard from spec POC",
+  "blocks": [
+    {
+      "name": "Intro",
+      "type": "text",
+      "dataConfig": {
+        "text": "# Dashboard from spec\nCreated by lark-cli automation."
+      }
+    }
+  ]
+}

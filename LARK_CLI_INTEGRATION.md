@@ -78,3 +78,21 @@ http://127.0.0.1:4173/?url=https%3A%2F%2Fexample.com
 ```
 
 This makes it easier for CLI/deploy automation to produce a ready-to-preview URL even before Lark custom page registration is automated.
+
+## Findings after deeper check — custom page block
+
+As of `lark-cli 1.0.45`, CLI dashboard block creation still only exposes native block types:
+
+```txt
+column, bar, line, pie, ring, area, combo, scatter, funnel, wordCloud, radar, statistics, text
+```
+
+No CLI flag/type was found for arbitrary custom page / iframe / extension dashboard block creation.
+
+Web research indicates the direct Dashboard custom block API is still not generally exposed; current robust route for rich custom UI is likely:
+
+1. Deploy this React app as a static custom page.
+2. Register/add it through Lark Base extension/custom component UI or aPaaS flow.
+3. Use `lark-cli` for everything around it: Base setup, native dashboard blocks, fields/tables/records, config docs, and validation.
+
+So this repo can be used as the custom page payload, while CLI remains the automation/control plane.
