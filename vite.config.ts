@@ -1,17 +1,7 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import { semiTheming } from "vite-plugin-semi-theming";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  base: "./",
-  plugins: [
-    react(),
-    semiTheming({
-        theme: "@semi-bot/semi-theme-feishu-dashboard",
-    }),
-  ],
-  server: {
-    host: "0.0.0.0",
-  },
+  plugins: [react()],
+  base: process.env.GITHUB_REPOSITORY ? `/${process.env.GITHUB_REPOSITORY.split('/')[1]}/` : './',
 });
