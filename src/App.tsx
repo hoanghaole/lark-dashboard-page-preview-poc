@@ -189,7 +189,14 @@ function App() {
     }
     if (form.nguyenNhan.trim()) record["Nguyên nhân"] = form.nguyenNhan.trim();
     if (form.keHoach.trim()) record["Kế hoạch"] = form.keHoach.trim();
+    record["Mã chiến lược"] = strategyCode();
     return record;
+  };
+
+  const strategyCode = () => {
+    const d = new Date();
+    const p = (n: number) => String(n).padStart(2, "0");
+    return `CS-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
   };
 
   const saveForm = async () => {
@@ -220,11 +227,11 @@ function App() {
         Toast.success("Đã cập nhật!");
         setEditingId(null);
       } else {
-        const created = await table.addRecord({ fields: record } as any);
-        // Save child actions to Store_Actions, linked by Chiến lược ID.
-        const feedbackId = (created as any)?.record_id ?? (created as any)?.recordId ?? "";
+        const code = strategyCode();
+        // Chiến lược ID dùng chung mã với bảng 1 (Mã chiến lược) — không phụ thuộc record_id.
+        await table.addRecord({ fields: record } as any);
         const validActions = actions.filter(a => a.hanhDong.trim());
-        if (feedbackId && validActions.length > 0) {
+        if (validActions.length > 0) {
           try {
             const tableActions = await bitable.base.getTableById(TABLE_ID_ACTIONS);
             const aMeta = await tableActions.getFieldMetaList();
@@ -240,7 +247,7 @@ function App() {
               if (a.nguoi.trim()) setA("Người phụ trách", a.nguoi.trim());
               const ms = new Date(a.deadline).getTime();
               if (!isNaN(ms)) setA("Deadline", ms);
-              setA("Chiến lược ID", feedbackId);
+              setA("Chiến lược ID", code);
               await tableActions.addRecord({ fields: rec } as any);
             }
           } catch (aErr) {
