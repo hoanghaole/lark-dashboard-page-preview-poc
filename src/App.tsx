@@ -245,6 +245,7 @@ function App() {
             }
           } catch (aErr) {
             console.error("save actions error", aErr);
+            Toast.error("Lưu hành động thất bại: " + ((aErr as any)?.message || String(aErr)));
           }
         }
         Toast.success("Đã lưu!");
