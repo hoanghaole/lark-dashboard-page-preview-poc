@@ -322,11 +322,6 @@ function App() {
       {/* Read + Input side panel */}
       {panelOpen && (
       <div className="config-panel">
-        {dbg && (
-          <div className="dbg-box" style={{ marginBottom: 8, padding: 8, background: "#fff7e6", border: "1px solid #ffd591", borderRadius: 4, fontSize: 11, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-            <Typography.Text type="warning">Diagnostic: {dbg}</Typography.Text>
-          </div>
-        )}
         <div className="panel-row">
           <div className="panel-title"><strong>Nhập phản hồi cửa hàng</strong></div>
           <Popover content="Danh sách phản hồi đã nhập">
