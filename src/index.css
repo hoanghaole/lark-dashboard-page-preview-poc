@@ -9,3 +9,8 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Force Tahoma everywhere, overriding Semi Design component fonts (tabs, titles, labels). */
+#root, #root * {
+  font-family: Tahoma, Verdana, Segoe UI, sans-serif !important;
+}
