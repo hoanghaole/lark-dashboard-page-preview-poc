@@ -85,6 +85,7 @@ const KPI_GROUPS: { label: string; options: { value: string; label: string }[] }
 
 interface IFeedbackForm {
   chiSo: string;
+  ngayBatDau: string;
   nguyenNhan: string;
   keHoach: string;
   nguoiPhuTrach: string;
@@ -94,6 +95,7 @@ interface IFeedbackForm {
 interface IRecordRow {
   record_id: string;
   chiSo: string;
+  ngayBatDau: string;
   nguyenNhan: string;
   keHoach: string;
   nguoiPhuTrach: string;
@@ -101,7 +103,7 @@ interface IRecordRow {
   lenLop: string;
 }
 
-const EMPTY_FORM: IFeedbackForm = { chiSo: "", nguyenNhan: "", keHoach: "", nguoiPhuTrach: "", deadline: "" };
+const EMPTY_FORM: IFeedbackForm = { chiSo: "", ngayBatDau: "", nguyenNhan: "", keHoach: "", nguoiPhuTrach: "", deadline: "" };
 
 function App() {
   const { bgColor } = useTheme();
@@ -140,6 +142,7 @@ function App() {
         rows.push({
           record_id: r.record_id ?? r.recordId,
           chiSo: g("Chỉ số"),
+          ngayBatDau: g("Ngày bắt đầu"),
           nguyenNhan: g("Nguyên nhân"),
           keHoach: g("Kế hoạch"),
           nguoiPhuTrach: g("Người phụ trách (tên)"),
@@ -175,6 +178,10 @@ function App() {
     const record: Record<string, unknown> = {};
     record["Phòng ban"] = activeLabel || "";
     if (form.chiSo.trim()) record["Chỉ số"] = form.chiSo.trim();
+    if (form.ngayBatDau) {
+      const ms = new Date(form.ngayBatDau).getTime();
+      if (!isNaN(ms)) record["Ngày bắt đầu"] = ms;
+    }
     if (form.nguyenNhan.trim()) record["Nguyên nhân"] = form.nguyenNhan.trim();
     if (form.keHoach.trim()) record["Kế hoạch"] = form.keHoach.trim();
     if (form.nguoiPhuTrach.trim()) record["Người phụ trách (tên)"] = form.nguoiPhuTrach.trim();
@@ -232,6 +239,7 @@ function App() {
     setEditingId(row.record_id);
     setForm({
       chiSo: row.chiSo || "",
+      ngayBatDau: row.ngayBatDau || "",
       nguyenNhan: row.nguyenNhan || "",
       keHoach: row.keHoach || "",
       nguoiPhuTrach: row.nguoiPhuTrach || "",
@@ -354,6 +362,15 @@ function App() {
                 </Select.OptGroup>
               ))}
             </Select>
+          </div>
+          <div className="form-item">
+            <Form.Label className="label">Ngày bắt đầu</Form.Label>
+            <DatePicker
+              value={form.ngayBatDau || undefined}
+              onChange={(d: any) => setForm(prev => ({ ...prev, ngayBatDau: d ? String(d) : "" }))}
+              className="input"
+              style={{ width: "100%" }}
+            />
           </div>
           <div className="form-item">
             <Form.Label className="label">Lĩnh vực / Loại</Form.Label>
