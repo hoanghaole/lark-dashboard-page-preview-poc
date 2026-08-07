@@ -355,6 +355,7 @@ html {
   border-left: var(--line-color) 1px solid;
   padding: 20px;
   box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .form {

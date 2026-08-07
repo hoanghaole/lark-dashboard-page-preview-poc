@@ -3,7 +3,7 @@ import { dashboard, DashboardState, bitable, IFieldMeta } from "@lark-base-open/
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Button, Input, Space, Form, Typography, TextArea, DatePicker, Toast, SideSheet, Nav, Popover, Select } from "@douyinfe/semi-ui";
 import IconCustomerSupport from "@douyinfe/semi-icons/lib/es/icons/IconCustomerSupport";
-import { IconHome, IconServer, IconComment, IconUser, IconRefresh, IconEdit, IconDelete, IconSidebar, IconSetting, IconCoinMoney } from "@douyinfe/semi-icons";
+import { IconHome, IconServer, IconComment, IconUser, IconRefresh, IconEdit, IconDelete, IconSidebar, IconSetting, IconCoinMoney, IconPlus } from "@douyinfe/semi-icons";
 import { useTheme, useConfig } from "./hooks/index";
 import '@lark-base-open/js-sdk/dist/style/dashboard.css';
 import "./App.scss";
@@ -83,13 +83,21 @@ const KPI_GROUPS: { label: string; options: { value: string; label: string }[] }
   },
 ];
 
+interface IActionItem {
+  hanhDong: string;
+  nguoi: string;
+  deadline: string;
+}
+
+const EMPTY_ACTION: IActionItem = { hanhDong: "", nguoi: "", deadline: "" };
+
+const TABLE_ID_ACTIONS = "tblZFnTjYHIjNJAF";
+
 interface IFeedbackForm {
   chiSo: string;
   ngayBatDau: string;
   nguyenNhan: string;
   keHoach: string;
-  nguoiPhuTrach: string;
-  deadline: string;
 }
 
 interface IRecordRow {
@@ -98,12 +106,10 @@ interface IRecordRow {
   ngayBatDau: string;
   nguyenNhan: string;
   keHoach: string;
-  nguoiPhuTrach: string;
-  deadline: string;
   lenLop: string;
 }
 
-const EMPTY_FORM: IFeedbackForm = { chiSo: "", ngayBatDau: "", nguyenNhan: "", keHoach: "", nguoiPhuTrach: "", deadline: "" };
+const EMPTY_FORM: IFeedbackForm = { chiSo: "", ngayBatDau: "", nguyenNhan: "", keHoach: "" };
 
 function App() {
   const { bgColor } = useTheme();
@@ -115,6 +121,7 @@ function App() {
   const [fields, setFields] = useState<IFieldMeta[]>([]);
   const [activeTab, setActiveTab] = useState("kinhdoanh");
   const [form, setForm] = useState<IFeedbackForm>(EMPTY_FORM);
+  const [actions, setActions] = useState<IActionItem[]>([]);
   const [records, setRecords] = useState<IRecordRow[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -145,8 +152,6 @@ function App() {
           ngayBatDau: g("Ngày bắt đầu"),
           nguyenNhan: g("Nguyên nhân"),
           keHoach: g("Kế hoạch"),
-          nguoiPhuTrach: g("Người phụ trách (tên)"),
-          deadline: g("Deadline"),
           lenLop: g("Đã cập nhật"),
         });
       }
@@ -184,11 +189,6 @@ function App() {
     }
     if (form.nguyenNhan.trim()) record["Nguyên nhân"] = form.nguyenNhan.trim();
     if (form.keHoach.trim()) record["Kế hoạch"] = form.keHoach.trim();
-    if (form.nguoiPhuTrach.trim()) record["Người phụ trách (tên)"] = form.nguoiPhuTrach.trim();
-    if (form.deadline) {
-      const ms = new Date(form.deadline).getTime();
-      if (!isNaN(ms)) record["Deadline"] = ms;
-    }
     return record;
   };
 
@@ -220,10 +220,37 @@ function App() {
         Toast.success("Đã cập nhật!");
         setEditingId(null);
       } else {
-        await table.addRecord({ fields: record } as any);
+        const created = await table.addRecord({ fields: record } as any);
+        // Save child actions to Store_Actions, linked by Chiến lược ID.
+        const feedbackId = (created as any)?.record_id ?? (created as any)?.recordId ?? "";
+        const validActions = actions.filter(a => a.hanhDong.trim());
+        if (feedbackId && validActions.length > 0) {
+          try {
+            const tableActions = await bitable.base.getTableById(TABLE_ID_ACTIONS);
+            const aMeta = await tableActions.getFieldMetaList();
+            const aNameToId: Record<string, string> = {};
+            for (const m of aMeta as any[]) aNameToId[m.name] = m.id;
+            for (const a of validActions) {
+              const rec: Record<string, unknown> = {};
+              const setA = (fn: string, val: unknown) => {
+                const id = aNameToId[fn];
+                if (id && val != null) rec[id] = val;
+              };
+              setA("Hành động", a.hanhDong.trim());
+              if (a.nguoi.trim()) setA("Người phụ trách", a.nguoi.trim());
+              const ms = new Date(a.deadline).getTime();
+              if (!isNaN(ms)) setA("Deadline", ms);
+              setA("Chiến lược ID", feedbackId);
+              await tableActions.addRecord({ fields: rec } as any);
+            }
+          } catch (aErr) {
+            console.error("save actions error", aErr);
+          }
+        }
         Toast.success("Đã lưu!");
       }
       setForm(EMPTY_FORM);
+      setActions([]);
       await refreshRecords();
     } catch (e) {
       const errMsg = (e as Error)?.message || String(e);
@@ -242,8 +269,6 @@ function App() {
       ngayBatDau: row.ngayBatDau || "",
       nguyenNhan: row.nguyenNhan || "",
       keHoach: row.keHoach || "",
-      nguoiPhuTrach: row.nguoiPhuTrach || "",
-      deadline: row.deadline || "",
     });
     setSheetOpen(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -385,12 +410,28 @@ function App() {
             <TextArea value={form.keHoach} placeholder="Sẽ làm gì để cải thiện / duy trì" onChange={set("keHoach")} className="input" autosize />
           </div>
           <div className="form-item">
-            <Form.Label className="label">Người phụ trách</Form.Label>
-            <Input value={form.nguoiPhuTrach} placeholder="Tên người làm" onChange={set("nguoiPhuTrach")} className="input" />
-          </div>
-          <div className="form-item">
-            <Form.Label className="label">Deadline</Form.Label>
-            <DatePicker value={form.deadline || undefined} onChange={(d) => setForm(prev => ({ ...prev, deadline: d ? String(d) : "" }))} className="input" style={{ width: "100%" }} />
+            <Form.Label className="label">Hành động</Form.Label>
+            {actions.map((a, idx) => (
+              <div key={idx} style={{ border: "1px solid #e5e6eb", borderRadius: 6, padding: 8, marginBottom: 8, background: "#fafafa" }}>
+                <Space style={{ width: "100%", marginBottom: 8 }} align="center">
+                  <Typography.Text strong style={{ fontSize: 12 }}>Hành động {idx + 1}</Typography.Text>
+                  <Button size="small" icon={<IconDelete />} theme="borderless" type="danger" onClick={() => setActions(prev => prev.filter((_, i) => i !== idx))} />
+                </Space>
+                <div style={{ display: "grid", gap: 6, gridTemplateColumns: "1fr", marginBottom: 6 }}>
+                  <Input placeholder="Nội dung hành động" value={a.hanhDong} onChange={e => setActions(prev => prev.map((x, i) => i === idx ? { ...x, hanhDong: e } : x))} />
+                  <Input placeholder="Ai thực hiện" value={a.nguoi} onChange={e => setActions(prev => prev.map((x, i) => i === idx ? { ...x, nguoi: e } : x))} />
+                  <DatePicker
+                    placeholder="Deadline"
+                    value={a.deadline || undefined}
+                    onChange={(d: any) => setActions(prev => prev.map((x, i) => i === idx ? { ...x, deadline: d ? String(d) : "" } : x))}
+                    style={{ width: "100%" }}
+                  />
+                </div>
+              </div>
+            ))}
+            <Button size="small" icon={<IconPlus />} theme="borderless" onClick={() => setActions(prev => [...prev, { ...EMPTY_ACTION }])} style={{ width: "100%" }}>
+              ＋ Thêm hành động
+            </Button>
           </div>
         </Form>
 
@@ -445,7 +486,7 @@ function App() {
               {r.lenLop && <Typography.Text type="tertiary" style={{ fontSize: 12 }}>{r.lenLop}</Typography.Text>}
               <div><Typography.Text type="secondary" style={{ fontSize: 12 }}>{r.nguyenNhan || "—"}</Typography.Text></div>
               <div><Typography.Text type="secondary" style={{ fontSize: 12 }}>{r.keHoach || ""}</Typography.Text></div>
-              <div><Typography.Text type="tertiary" style={{ fontSize: 12 }}>{r.nguoiPhuTrach ? `👤 ${r.nguoiPhuTrach}` : ""}{r.deadline ? `  📅 ${r.deadline}` : ""}</Typography.Text></div>
+              <div><Typography.Text type="tertiary" style={{ fontSize: 12 }}>{r.lenLop ? `🔄 ${r.lenLop}` : ""}</Typography.Text></div>
             </div>
           ))}
         </div>
