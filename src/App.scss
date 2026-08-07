@@ -401,3 +401,11 @@ html {
   font-family: Tahoma, Verdana, sans-serif;
   font-size: 14px;
 }
+
+/* Force Tahoma everywhere, overriding Semi Design component fonts (tabs, titles, labels). */
+#root,
+#root *,
+#root *::before,
+#root *::after {
+  font-family: Tahoma, Verdana, Segoe UI, sans-serif !important;
+}
