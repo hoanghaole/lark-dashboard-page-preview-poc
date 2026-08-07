@@ -289,6 +289,48 @@ html {
   height: 100vh;
 }
 
+/* Wireframe layout: left vertical tab rail | wide BI center | narrow right form */
+.app-main {
+  display: flex;
+  box-sizing: border-box;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.side-nav {
+  flex: none;
+  width: 88px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.content-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.content-wrap .panel-title {
+  flex: none;
+  padding: 10px 16px;
+  border-bottom: var(--line-color) 1px solid;
+}
+
+.content-wrap .container {
+  flex: 1 1 auto;
+  height: auto;
+}
+
+.panel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .main-config {
   border-top: var(--line-color) 1px solid;
   box-sizing: border-box;
