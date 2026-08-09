@@ -171,6 +171,8 @@ function App() {
   const [saving, setSaving] = useState(false);
   const [fields, setFields] = useState<IFieldMeta[]>([]);
   const [activeTab, setActiveTab] = useState("kinhdoanh");
+  // Mount the active BI first, then preload one more tab at a time in the background.
+  const [mountedTabs, setMountedTabs] = useState<Set<string>>(() => new Set(["kinhdoanh"]));
   // Track which iframes have finished loading (per tab) to hide spinner.
   const [loadedTabs, setLoadedTabs] = useState<Record<string, boolean>>({});
   const [form, setForm] = useState<IFeedbackForm>(EMPTY_FORM);
@@ -386,6 +388,20 @@ function App() {
 
   const activeLabel = TABS.find(x => x.key === activeTab)?.label || "";
 
+  useEffect(() => {
+    const pending = TABS.filter(tab => !mountedTabs.has(tab.key));
+    if (!pending.length) return;
+    const timer = window.setTimeout(() => {
+      setMountedTabs(prev => new Set(prev).add(pending[0].key));
+    }, 1200);
+    return () => window.clearTimeout(timer);
+  }, [mountedTabs]);
+
+  const selectTab = (key: string) => {
+    setMountedTabs(prev => new Set(prev).add(key));
+    setActiveTab(key);
+  };
+
   return (
     <main style={{ backgroundColor: bgColor }} className="app-main">
       {/* Vertical tab rail */}
@@ -393,7 +409,7 @@ function App() {
         className="side-nav"
         style={{ width: 60 }}
         selectedKeys={[activeTab]}
-        onSelect={(e: any) => setActiveTab(String(e.itemKey))}
+        onSelect={(e: any) => selectTab(String(e.itemKey))}
         items={TABS.map(x => ({ itemKey: x.key, icon: x.icon }))}
       />
 
@@ -404,7 +420,7 @@ function App() {
           {TABS.map((tab) => {
             const url = TAB_BI_URL[tab.key] || DEFAULT_BI_URL;
             const active = tab.key === activeTab;
-            if (!url) return null;
+            if (!url || !mountedTabs.has(tab.key)) return null;
             return (
               <div key={tab.key} className={`tab-pane ${active ? "active" : ""}`}>
                 {!loadedTabs[tab.key] && (
