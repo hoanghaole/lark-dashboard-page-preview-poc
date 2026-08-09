@@ -335,8 +335,11 @@ function App() {
       nguyenNhan: row.nguyenNhan || "",
       keHoach: row.keHoach || "",
     });
-    setSheetOpen(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setPanelOpen(true);
+    setSheetOpen(false);
+    window.setTimeout(() => {
+      document.querySelector(".config-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 0);
   };
 
   const updateConfig = (res: any) => {
