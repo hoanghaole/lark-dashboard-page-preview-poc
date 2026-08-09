@@ -40,13 +40,13 @@ const BASE_TOKEN = "HdqfbQnYgaNmOJsDJNdlKVmCg4c";
 const TABLE_ID = "tbl5VbzzomDFdAfn";
 
 const TABS = [
+  { key: "hethong", label: "Hệ thống", icon: <IconSetting />, color: "#5a6472" },
   { key: "kinhdoanh", label: "Kinh doanh", icon: <IconHome />, color: "#2f6fed" },
   { key: "dichvu", label: "Dịch vụ", icon: <IconServer />, color: "#f0722f" },
   { key: "cr", label: "CR", icon: <IconCustomerSupport />, color: "#7a5af8" },
   { key: "mkt", label: "MKT", icon: <IconComment />, color: "#00a85d" },
   { key: "hr", label: "HR", icon: <IconUser />, color: "#e14d6e" },
   { key: "ketoan", label: "Kế toán", icon: <IconCoinMoney />, color: "#b8870c" },
-  { key: "hethong", label: "Hệ thống", icon: <IconSetting />, color: "#5a6472" },
 ];
 
 type IKpiGroup = { label: string; options: { value: string; label: string }[] };
@@ -170,9 +170,9 @@ function App() {
   const [inputValue, setInputValue] = useState(DEFAULT_URL);
   const [saving, setSaving] = useState(false);
   const [fields, setFields] = useState<IFieldMeta[]>([]);
-  const [activeTab, setActiveTab] = useState("kinhdoanh");
+  const [activeTab, setActiveTab] = useState(TABS[0].key);
   // Mount the active BI first, then preload one more tab at a time in the background.
-  const [mountedTabs, setMountedTabs] = useState<Set<string>>(() => new Set(["kinhdoanh"]));
+  const [mountedTabs, setMountedTabs] = useState<Set<string>>(() => new Set([TABS[0].key]));
   // Track which iframes have finished loading (per tab) to hide spinner.
   const [loadedTabs, setLoadedTabs] = useState<Record<string, boolean>>({});
   const [form, setForm] = useState<IFeedbackForm>(EMPTY_FORM);
