@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { dashboard, DashboardState, bitable, IFieldMeta, FieldType } from "@lark-base-open/js-sdk";
+import { dashboard, DashboardState, bitable, IFieldMeta } from "@lark-base-open/js-sdk";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Button, Input, Space, Form, Typography, TextArea, DatePicker, Toast, SideSheet, Nav, Popover, Select, Spin } from "@douyinfe/semi-ui";
 import IconCustomerSupport from "@douyinfe/semi-icons/lib/es/icons/IconCustomerSupport";
@@ -180,7 +180,6 @@ function App() {
   const [records, setRecords] = useState<IRecordRow[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [currentUserIds, setCurrentUserIds] = useState<Set<string>>(new Set());
   const [dbg, setDbg] = useState<string>("");
 
   const isCreate = dashboard.state === DashboardState.Create;
@@ -191,21 +190,10 @@ function App() {
   const refreshRecords = useCallback(async () => {
     try {
       const table = await bitable.base.getTableById(TABLE_ID);
-      const [meta, userId, baseUserId] = await Promise.all([
-        table.getFieldMetaList(),
-        bitable.bridge.getUserId(),
-        bitable.bridge.getBaseUserId(),
-      ]);
-      const ownIds = new Set([userId, baseUserId].filter(Boolean));
-      setCurrentUserIds(ownIds);
-      const creator = (meta as any[]).find((f: any) => f.type === FieldType.CreatedUser);
+      const meta = await table.getFieldMetaList();
       const res = await table.getRecords({ pageSize: 200, sort: [{ field_name: "Thời gian nhập", desc: true }] } as any);
       const rows: IRecordRow[] = [];
       for (const r of (res as any)?.records || []) {
-        const createdBy = creator ? (r.fields as any)?.[creator.id] : null;
-        const creators = Array.isArray(createdBy) ? createdBy : createdBy ? [createdBy] : [];
-        const isOwn = creators.some((u: any) => [u?.id, u?.user_id, u?.open_id, u?.base_user_id].some(id => ownIds.has(id)));
-        if (!creator || !isOwn) continue;
         const g = (fn: string) => {
           const f = (meta as any[]).find((x: any) => x.name === fn);
           const v = f ? (r.fields as any)?.[f.id] ?? (r.fields as any)?.[fn] : r.fields?.[fn];
@@ -226,7 +214,7 @@ function App() {
       setRecords(rows);
     } catch (e) {
       console.warn("refreshRecords error", e);
-      Toast.error("Không xác định được phản hồi của người dùng hiện tại");
+      Toast.error("Không tải được danh sách phản hồi");
     }
   }, []);
 
@@ -340,10 +328,6 @@ function App() {
   };
 
   const beginEdit = (row: IRecordRow) => {
-    if (!currentUserIds.size || !records.some(r => r.record_id === row.record_id)) {
-      Toast.error("Bạn không có quyền sửa phản hồi này");
-      return;
-    }
     setEditingId(row.record_id);
     setForm({
       chiSo: row.chiSo || "",
