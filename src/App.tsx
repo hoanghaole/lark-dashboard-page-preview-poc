@@ -191,7 +191,7 @@ function App() {
     try {
       const table = await bitable.base.getTableById(TABLE_ID);
       const meta = await table.getFieldMetaList();
-      const res = await table.getRecords({ pageSize: 200, sort: [{ field_name: "Thời gian nhập", desc: true }] } as any);
+      const res = await table.getRecords({ pageSize: 200 } as any);
       const rows: IRecordRow[] = [];
       for (const r of (res as any)?.records || []) {
         const g = (fn: string) => {
@@ -211,10 +211,10 @@ function App() {
           lenLop: g("Đã cập nhật"),
         });
       }
-      setRecords(rows);
+      setRecords(rows.reverse());
     } catch (e) {
       console.warn("refreshRecords error", e);
-      Toast.error("Không tải được danh sách phản hồi");
+      Toast.error("Không tải được danh sách phản hồi: " + ((e as Error)?.message || String(e)));
     }
   }, []);
 
