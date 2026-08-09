@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { dashboard, DashboardState, bitable, IFieldMeta } from "@lark-base-open/js-sdk";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Button, Input, Space, Form, Typography, TextArea, DatePicker, Toast, SideSheet, Nav, Popover, Select } from "@douyinfe/semi-ui";
+import { Button, Input, Space, Form, Typography, TextArea, DatePicker, Toast, SideSheet, Nav, Popover, Select, Spin } from "@douyinfe/semi-ui";
 import IconCustomerSupport from "@douyinfe/semi-icons/lib/es/icons/IconCustomerSupport";
 import { IconHome, IconServer, IconComment, IconUser, IconRefresh, IconEdit, IconDelete, IconSidebar, IconSetting, IconCoinMoney, IconPlus } from "@douyinfe/semi-icons";
 import { useTheme, useConfig } from "./hooks/index";
@@ -15,6 +15,17 @@ interface IPreviewConfig {
 }
 
 const DEFAULT_BI_URL = "https://app.powerbi.com/view?r=eyJrIjoiNzkyMzE5MmMtZjkyYi00M2JjLTlhNTQtMzI2NTk0YWFjZDUxIiwidCI6ImM0YzU5OTA3LWJlOGItNGIyYS1iMjI2LTgyZmE5MjIzZDc0MiIsImMiOjEwfQ%3D%3D";
+const MKT_BI_URL = "https://app.powerbi.com/view?r=eyJrIjoiODJjOWY4YTQtMWQ0OC00YmNmLThiYzMtNWM2YWRlNGQyYmQ1IiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D&pageName=b6332825f273b36e2d1f";
+// Chưa có link riêng => dùng link chung; Ba gửi link từng phòng ban là điền vào đây.
+const TAB_BI_URL: Record<string, string> = {
+  kinhdoanh: DEFAULT_BI_URL,
+  dichvu: "https://app.powerbi.com/view?r=eyJrIjoiYmU2ZjRkZWUtYWYzZi00MzI4LTkwZTktMTQyY2IxNTczMWM3IiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
+  cr: DEFAULT_BI_URL,
+  mkt: MKT_BI_URL,
+  hr: DEFAULT_BI_URL,
+  ketoan: DEFAULT_BI_URL,
+  hethong: DEFAULT_BI_URL,
+};
 
 const DEFAULT_URL = (() => {
   try {
@@ -29,16 +40,56 @@ const BASE_TOKEN = "HdqfbQnYgaNmOJsDJNdlKVmCg4c";
 const TABLE_ID = "tbl5VbzzomDFdAfn";
 
 const TABS = [
-  { key: "kinhdoanh", label: "Kinh doanh", icon: <IconHome /> },
-  { key: "dichvu", label: "Dịch vụ", icon: <IconServer /> },
-  { key: "cr", label: "CR", icon: <IconCustomerSupport /> },
-  { key: "mkt", label: "MKT", icon: <IconComment /> },
-  { key: "hr", label: "HR", icon: <IconUser /> },
-  { key: "ketoan", label: "Kế toán", icon: <IconCoinMoney /> },
-  { key: "hethong", label: "Hệ thống", icon: <IconSetting /> },
+  { key: "kinhdoanh", label: "Kinh doanh", icon: <IconHome />, color: "#2f6fed" },
+  { key: "dichvu", label: "Dịch vụ", icon: <IconServer />, color: "#f0722f" },
+  { key: "cr", label: "CR", icon: <IconCustomerSupport />, color: "#7a5af8" },
+  { key: "mkt", label: "MKT", icon: <IconComment />, color: "#00a85d" },
+  { key: "hr", label: "HR", icon: <IconUser />, color: "#e14d6e" },
+  { key: "ketoan", label: "Kế toán", icon: <IconCoinMoney />, color: "#b8870c" },
+  { key: "hethong", label: "Hệ thống", icon: <IconSetting />, color: "#5a6472" },
 ];
 
-const KPI_GROUPS: { label: string; options: { value: string; label: string }[] }[] = [
+type IKpiGroup = { label: string; options: { value: string; label: string }[] };
+
+const SERVICE_KPI_GROUPS: IKpiGroup[] = [
+  {
+    label: "1. Dịch vụ",
+    options: [
+      "1.01. Lượt xe dịch vụ",
+      "1.02. Lượt xe KTĐK",
+      "1.03. Lượt xe Sửa chữa",
+      "1.04. Lượt xe Tự nhiên",
+      "1.05. Doanh thu dịch vụ",
+      "1.06. Doanh thu PT HVN",
+      "1.07. Doanh thu Tiền công",
+      "1.08. Doanh thu DV Phụ",
+      "1.09. Doanh thu tiền dịch vụ phụ bình quân/xe",
+      "1.10. Hệ số tồn kho (không tính Rank E lâu năm)",
+      "1.11. Tỷ trọng tồn kho Rank A",
+      "1.12. Tỷ trọng tồn kho Rank B",
+      "1.13. Tỷ trọng tồn kho Rank C",
+      "1.14. Tỷ trọng tồn kho Rank D",
+      "1.15. Tỷ trọng tồn kho Rank E",
+      "1.16. Tổng tiền tồn kho lâu năm",
+      "1.17. Tỷ lệ tồn đơn hàng sau 3 tháng",
+      "1.18. Tỷ lệ tồn đơn hàng sau 6 tháng",
+    ].map(label => ({ value: label, label })),
+  },
+  {
+    label: "2. Trải nghiệm khách hàng",
+    options: ["2.1. CSI", "2.2. NPS", "2.3. CSAT", "2.4. Khen", "2.5. Góp ý", "2.6. Khiếu nại"].map(label => ({ value: label, label })),
+  },
+  {
+    label: "3. Vận hành",
+    options: ["3.1. Top công ty - dịch vụ", "3.2. Hệ thống văn bản", "3.4. Công nghệ"].map(label => ({ value: label, label })),
+  },
+  {
+    label: "4. Con người & phát triển",
+    options: ["4.1. Giá trị cốt lõi", "4.2. Đào tạo", "4.3. Lộ trình phát triển", "4.4. Năng suất lao động"].map(label => ({ value: label, label })),
+  },
+];
+
+const KPI_GROUPS: IKpiGroup[] = [
   {
     label: "1. Kinh doanh",
     options: [
@@ -120,6 +171,8 @@ function App() {
   const [saving, setSaving] = useState(false);
   const [fields, setFields] = useState<IFieldMeta[]>([]);
   const [activeTab, setActiveTab] = useState("kinhdoanh");
+  // Track which iframes have finished loading (per tab) to hide spinner.
+  const [loadedTabs, setLoadedTabs] = useState<Record<string, boolean>>({});
   const [form, setForm] = useState<IFeedbackForm>(EMPTY_FORM);
   const [actions, setActions] = useState<IActionItem[]>([]);
   const [records, setRecords] = useState<IRecordRow[]>([]);
@@ -329,8 +382,6 @@ function App() {
     try { new URL(config.url); return true; } catch { return false; }
   }, [config.url]);
 
-  const currentUrl = isUrlValid ? config.url : "";
-
   const set = (k: keyof IFeedbackForm) => (v: any) => setForm(prev => ({ ...prev, [k]: v || "" }));
 
   const activeLabel = TABS.find(x => x.key === activeTab)?.label || "";
@@ -340,7 +391,7 @@ function App() {
       {/* Vertical tab rail */}
       <Nav
         className="side-nav"
-        style={{ width: 56 }}
+        style={{ width: 60 }}
         selectedKeys={[activeTab]}
         onSelect={(e: any) => setActiveTab(String(e.itemKey))}
         items={TABS.map(x => ({ itemKey: x.key, icon: x.icon }))}
@@ -349,15 +400,29 @@ function App() {
       {/* Main content */}
       <div className="content-wrap">
         <div className="panel-title"><strong>{activeLabel}</strong></div>
-        {currentUrl ? (
-          <iframe className="container" src={currentUrl} title="Dashboard page preview" />
-        ) : (
-          <center className="container">
-            <Space vertical>
-              <span className="url-empty">{t("placeholder.urlEmpty")}</span>
-            </Space>
-          </center>
-        )}
+        <div className="tabs-stage">
+          {TABS.map((tab) => {
+            const url = TAB_BI_URL[tab.key] || DEFAULT_BI_URL;
+            const active = tab.key === activeTab;
+            if (!url) return null;
+            return (
+              <div key={tab.key} className={`tab-pane ${active ? "active" : ""}`}>
+                {!loadedTabs[tab.key] && (
+                  <div className="tab-loading">
+                    <Spin />
+                    <span>Đang tải {tab.label}…</span>
+                  </div>
+                )}
+                <iframe
+                  className={`bi-frame ${loadedTabs[tab.key] ? "loaded" : ""}`}
+                  src={url}
+                  title={`Dashboard ${tab.label}`}
+                  onLoad={() => setLoadedTabs(prev => ({ ...prev, [tab.key]: true }))}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Read + Input side panel */}
@@ -387,7 +452,7 @@ function App() {
               style={{ width: "100%" }}
               filter
             >
-              {KPI_GROUPS.map(g => (
+              {(activeTab === "dichvu" ? SERVICE_KPI_GROUPS : KPI_GROUPS).map(g => (
                 <Select.OptGroup key={g.label} label={g.label}>
                   {g.options.map(o => (
                     <Select.Option key={o.value} value={o.value}>{o.label}</Select.Option>
@@ -399,6 +464,7 @@ function App() {
           <div className="form-item">
             <Form.Label className="label">Ngày bắt đầu</Form.Label>
             <DatePicker
+              format="dd/MM/yyyy"
               value={form.ngayBatDau || undefined}
               onChange={(d: any) => setForm(prev => ({ ...prev, ngayBatDau: d ? String(d) : "" }))}
               className="input"
@@ -407,7 +473,9 @@ function App() {
           </div>
           <div className="form-item">
             <Form.Label className="label">Lĩnh vực / Loại</Form.Label>
-            <Input value={activeLabel} disabled className="input" />
+            <div className="phongban-chip" style={{ backgroundColor: (TABS.find(x => x.key === activeTab)?.color || "#6b7280") + "22", color: TABS.find(x => x.key === activeTab)?.color || "#6b7280", borderColor: TABS.find(x => x.key === activeTab)?.color || "#6b7280" }}>
+              {activeLabel}
+            </div>
           </div>
           <div className="form-item">
             <Form.Label className="label">Nguyên nhân</Form.Label>
