@@ -3,7 +3,7 @@ import { dashboard, DashboardState, bitable, IFieldMeta } from "@lark-base-open/
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Button, Input, Space, Form, Typography, TextArea, DatePicker, Toast, SideSheet, Nav, Popover, Select, Spin } from "@douyinfe/semi-ui";
 import IconCustomerSupport from "@douyinfe/semi-icons/lib/es/icons/IconCustomerSupport";
-import { IconHome, IconServer, IconComment, IconUser, IconRefresh, IconEdit, IconDelete, IconSidebar, IconSetting, IconCoinMoney, IconPlus, IconPlay, IconPause, IconStop } from "@douyinfe/semi-icons";
+import { IconHome, IconServer, IconComment, IconUser, IconRefresh, IconEdit, IconDelete, IconSidebar, IconSetting, IconCoinMoney, IconPlus, IconPlay, IconPause, IconStop, IconList } from "@douyinfe/semi-icons";
 import { useTheme, useConfig } from "./hooks/index";
 import '@lark-base-open/js-sdk/dist/style/dashboard.css';
 import "./App.scss";
@@ -465,7 +465,10 @@ function App() {
         style={{ width: 60 }}
         selectedKeys={[activeTab]}
         onSelect={(e: any) => selectTab(String(e.itemKey))}
-        items={[...TABS.map(x => ({ itemKey: x.key, icon: x.icon })), { itemKey: "ids", text: "IDS", icon: <IconComment /> }]}
+        items={[
+          ...TABS.map(x => ({ itemKey: x.key, text: x.label, icon: x.icon })),
+          { itemKey: "ids", text: "IDS", icon: <IconList /> },
+        ]}
       />
 
       {/* Main content */}
