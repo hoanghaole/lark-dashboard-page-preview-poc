@@ -3,7 +3,7 @@ import { dashboard, DashboardState, bitable, IFieldMeta } from "@lark-base-open/
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Button, Input, Space, Form, Typography, TextArea, DatePicker, Toast, SideSheet, Nav, Popover, Select, Spin } from "@douyinfe/semi-ui";
 import IconCustomerSupport from "@douyinfe/semi-icons/lib/es/icons/IconCustomerSupport";
-import { IconHome, IconServer, IconComment, IconUser, IconRefresh, IconEdit, IconDelete, IconSidebar, IconSetting, IconCoinMoney, IconPlus } from "@douyinfe/semi-icons";
+import { IconHome, IconServer, IconComment, IconUser, IconRefresh, IconEdit, IconDelete, IconSidebar, IconSetting, IconCoinMoney, IconPlus, IconPlay, IconPause, IconStop } from "@douyinfe/semi-icons";
 import { useTheme, useConfig } from "./hooks/index";
 import '@lark-base-open/js-sdk/dist/style/dashboard.css';
 import "./App.scss";
@@ -143,6 +143,8 @@ interface IActionItem {
 const EMPTY_ACTION: IActionItem = { hanhDong: "", nguoi: "", deadline: "" };
 
 const TABLE_ID_ACTIONS = "tblZFnTjYHIjNJAF";
+const TABLE_ID_IDS = "tbl62pWCfKLMEHjQ";
+const TABLE_ID_MEETING_LOG = "tbldtBstrl16TXgJ";
 
 interface IFeedbackForm {
   chiSo: string;
@@ -181,6 +183,10 @@ function App() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dbg, setDbg] = useState<string>("");
+  const [meeting, setMeeting] = useState<{ started: number; paused: boolean; tabMs: Record<string, number>; lastTick: number } | null>(null);
+  const [idsForm, setIdsForm] = useState({ identify: "", discuss: "", solution: "", scope: "Công ty", status: "Mở" });
+  const [idsActions, setIdsActions] = useState<IActionItem[]>([]);
+  const [idsSaving, setIdsSaving] = useState(false);
 
   const isCreate = dashboard.state === DashboardState.Create;
   const isConfig = dashboard.state === DashboardState.Config || isCreate;
@@ -380,6 +386,62 @@ function App() {
   const set = (k: keyof IFeedbackForm) => (v: any) => setForm(prev => ({ ...prev, [k]: v || "" }));
 
   const activeLabel = TABS.find(x => x.key === activeTab)?.label || "";
+  const isIds = activeTab === "ids";
+  const elapsed = meeting ? Object.values(meeting.tabMs).reduce((a, b) => a + b, 0) : 0;
+  const fmt = (ms: number) => { const s = Math.floor(ms / 1000); return `${String(Math.floor(s / 3600)).padStart(2, "0")}:${String(Math.floor(s / 60) % 60).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; };
+
+  useEffect(() => {
+    if (!meeting) return;
+    const id = window.setInterval(() => {
+      const now = Date.now();
+      setMeeting(m => m ? { ...m, tabMs: m.paused ? m.tabMs : { ...m.tabMs, [activeTab]: (m.tabMs[activeTab] || 0) + now - m.lastTick }, lastTick: now } : m);
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [Boolean(meeting), activeTab]);
+
+  const saveIds = async () => {
+    if (!idsForm.identify.trim()) { Toast.warning("Nhập vấn đề cần xử lý"); return; }
+    setIdsSaving(true);
+    try {
+      const table = await bitable.base.getTableById(TABLE_ID_IDS);
+      const meta = await table.getFieldMetaList();
+      const ids: Record<string, unknown> = {};
+      const values: Record<string, unknown> = { Identify: idsForm.identify.trim(), Discuss: idsForm.discuss.trim(), Solution: idsForm.solution.trim(), "Phạm vi": idsForm.scope, "Trạng thái": idsForm.status, "Mã IDS": `IDS-${Date.now()}`, "Ngày họp": Date.now() };
+      for (const f of meta as any[]) if (values[f.name] !== undefined) ids[f.id] = values[f.name];
+      await table.addRecord({ fields: ids } as any);
+      const validActions = idsActions.filter(a => a.hanhDong.trim());
+      if (validActions.length) {
+        const actionTable = await bitable.base.getTableById(TABLE_ID_ACTIONS);
+        const actionMeta = await actionTable.getFieldMetaList();
+        const byName = Object.fromEntries((actionMeta as any[]).map(f => [f.name, f.id]));
+        for (const action of validActions) {
+          const fields: Record<string, unknown> = {};
+          const put = (name: string, value: unknown) => { if (byName[name] && value !== "") fields[byName[name]] = value; };
+          put("Hành động", action.hanhDong.trim()); put("Người phụ trách", action.nguoi.trim()); put("Nguồn", "IDS"); put("Mã nguồn", values["Mã IDS"]);
+          const deadline = new Date(action.deadline).getTime(); if (!isNaN(deadline)) put("Deadline", deadline);
+          await actionTable.addRecord({ fields } as any);
+        }
+      }
+      Toast.success("Đã lưu IDS");
+      setIdsForm({ identify: "", discuss: "", solution: "", scope: "Công ty", status: "Mở" });
+      setIdsActions([]);
+    } catch (e) { Toast.error("Lưu IDS thất bại: " + ((e as Error).message || String(e))); }
+    finally { setIdsSaving(false); }
+  };
+
+  const finishMeeting = async () => {
+    if (!meeting) return;
+    try {
+      const table = await bitable.base.getTableById(TABLE_ID_MEETING_LOG);
+      const meta = await table.getFieldMetaList();
+      const values: Record<string, unknown> = { "Meeting ID": `MEET-${meeting.started}`, "Bắt đầu": meeting.started, "Kết thúc": Date.now(), "Tổng thời lượng": Math.round(elapsed / 1000), "Chi tiết tab": Object.entries(meeting.tabMs).map(([k, v]) => `${TABS.find(t => t.key === k)?.label || k}: ${fmt(v)}`).join(" | ") };
+      const fields: Record<string, unknown> = {};
+      for (const f of meta as any[]) if (values[f.name] !== undefined) fields[f.id] = values[f.name];
+      await table.addRecord({ fields } as any);
+      Toast.success("Đã lưu nhật ký họp");
+    } catch (e) { Toast.error("Lưu nhật ký thất bại: " + ((e as Error).message || String(e))); }
+    setMeeting(null);
+  };
 
   useEffect(() => {
     const pending = TABS.filter(tab => !mountedTabs.has(tab.key));
@@ -403,13 +465,30 @@ function App() {
         style={{ width: 60 }}
         selectedKeys={[activeTab]}
         onSelect={(e: any) => selectTab(String(e.itemKey))}
-        items={TABS.map(x => ({ itemKey: x.key, icon: x.icon }))}
+        items={[...TABS.map(x => ({ itemKey: x.key, icon: x.icon })), { itemKey: "ids", text: "IDS", icon: <IconComment /> }]}
       />
 
       {/* Main content */}
       <div className="content-wrap">
-        <div className="panel-title"><strong>{activeLabel}</strong></div>
+        <div className="panel-title meeting-header"><strong>{isIds ? "IDS" : activeLabel}</strong>
+          <div className="meeting-controls">
+            <Typography.Text strong>{meeting ? `${meeting.paused ? "Tea break" : "Đang họp"} · ${fmt(elapsed)}` : ""}</Typography.Text>
+            {!meeting ? <Button theme="solid" type="primary" icon={<IconPlay />} onClick={() => { const now = Date.now(); setMeeting({ started: now, paused: false, tabMs: {}, lastTick: now }); }}>Bắt đầu họp</Button> : <Space><Button icon={<IconPause />} onClick={() => setMeeting(m => m ? { ...m, paused: !m.paused, lastTick: Date.now() } : m)}>{meeting.paused ? "Tiếp tục" : "Tea break"}</Button><Button type="danger" icon={<IconStop />} onClick={finishMeeting}>Kết thúc</Button></Space>}
+          </div>
+        </div>
         <div className="tabs-stage">
+          {isIds && <div className="ids-view">
+            <div className="ids-card"><Typography.Title heading={5}>Identify · Discuss · Solve</Typography.Title>
+              <Form className="form"><Form.Label className="label">Identify — Vấn đề</Form.Label><TextArea value={idsForm.identify} onChange={v => setIdsForm(x => ({ ...x, identify: v }))} autosize placeholder="Vấn đề cần xử lý trong giao ban" />
+                <Form.Label className="label">Discuss — Thảo luận</Form.Label><TextArea value={idsForm.discuss} onChange={v => setIdsForm(x => ({ ...x, discuss: v }))} autosize placeholder="Dữ kiện, nguyên nhân, trao đổi" />
+                <Form.Label className="label">Solution — Giải pháp</Form.Label><TextArea value={idsForm.solution} onChange={v => setIdsForm(x => ({ ...x, solution: v }))} autosize placeholder="Giải pháp/quyết định chốt" />
+                <div className="ids-grid"><Select value={idsForm.scope} onChange={v => setIdsForm(x => ({ ...x, scope: String(v) }))}><Select.Option value="Công ty">Công ty</Select.Option>{TABS.map(t => <Select.Option key={t.key} value={t.label}>{t.label}</Select.Option>)}</Select><Select value={idsForm.status} onChange={v => setIdsForm(x => ({ ...x, status: String(v) }))}><Select.Option value="Mở">Mở</Select.Option><Select.Option value="Đã chốt">Đã chốt</Select.Option><Select.Option value="Theo dõi">Theo dõi</Select.Option></Select></div>
+                <Form.Label className="label">Hành động</Form.Label>{idsActions.map((a, i) => <div className="ids-action" key={i}><Input value={a.hanhDong} placeholder="Hành động" onChange={v => setIdsActions(xs => xs.map((x, n) => n === i ? { ...x, hanhDong: v } : x))} /><Input value={a.nguoi} placeholder="Người phụ trách" onChange={v => setIdsActions(xs => xs.map((x, n) => n === i ? { ...x, nguoi: v } : x))} /><DatePicker value={a.deadline || undefined} placeholder="Deadline" onChange={(v: any) => setIdsActions(xs => xs.map((x, n) => n === i ? { ...x, deadline: v ? String(v) : "" } : x))} /><Button icon={<IconDelete />} theme="borderless" type="danger" onClick={() => setIdsActions(xs => xs.filter((_, n) => n !== i))} /></div>)}
+                <Button icon={<IconPlus />} theme="borderless" onClick={() => setIdsActions(xs => [...xs, { ...EMPTY_ACTION }])}>Thêm hành động</Button>
+                <Button type="primary" theme="solid" loading={idsSaving} onClick={saveIds}>Lưu IDS</Button>
+              </Form>
+            </div>
+          </div>}
           {TABS.map((tab) => {
             const url = TAB_BI_URL[tab.key] || DEFAULT_BI_URL;
             const active = tab.key === activeTab;
@@ -435,7 +514,7 @@ function App() {
       </div>
 
       {/* Read + Input side panel */}
-      {panelOpen && (
+      {panelOpen && !isIds && (
       <div className="config-panel">
         <div className="panel-row">
           <div className="panel-title"><strong>Nhập phản hồi cửa hàng</strong></div>
