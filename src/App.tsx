@@ -18,7 +18,7 @@ const DEFAULT_BI_URL = "https://app.powerbi.com/view?r=eyJrIjoiNzkyMzE5MmMtZjkyY
 const MKT_BI_URL = "https://app.powerbi.com/view?r=eyJrIjoiODJjOWY4YTQtMWQ0OC00YmNmLThiYzMtNWM2YWRlNGQyYmQ1IiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D&pageName=b6332825f273b36e2d1f";
 // Chưa có link riêng => dùng link chung; Ba gửi link từng phòng ban là điền vào đây.
 const TAB_BI_URL: Record<string, string> = {
-  kinhdoanh: DEFAULT_BI_URL,
+  kinhdoanh: "https://app.powerbi.com/view?r=eyJrIjoiNzkyMzE5MmMtZjkyYi00M2JjLTlhNTQtMzI2NTk0YWFjZDUxIiwidCI6ImM0YzU5OTA3LWJlOGItNGIyYS1iMjI2LTgyZmE5MjIzZDc0MiIsImMiOjEwfQ%3D%3D",
   dichvu: "https://app.powerbi.com/view?r=eyJrIjoiYmU2ZjRkZWUtYWYzZi00MzI4LTkwZTktMTQyY2IxNTczMWM3IiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
   cr: DEFAULT_BI_URL,
   mkt: MKT_BI_URL,
