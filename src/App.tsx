@@ -391,6 +391,10 @@ function App() {
   const fmt = (ms: number) => { const s = Math.floor(ms / 1000); return `${String(Math.floor(s / 3600)).padStart(2, "0")}:${String(Math.floor(s / 60) % 60).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; };
 
   useEffect(() => {
+    setIdsForm(form => ({ ...form, scope: activeLabel }));
+  }, [activeLabel]);
+
+  useEffect(() => {
     if (!meeting) return;
     const id = window.setInterval(() => {
       const now = Date.now();
@@ -423,7 +427,7 @@ function App() {
         }
       }
       Toast.success("Đã lưu IDS");
-      setIdsForm({ identify: "", discuss: "", solution: "", scope: "Công ty", status: "Mở" });
+      setIdsForm({ identify: "", discuss: "", solution: "", scope: activeLabel, status: "Mở" });
       setIdsActions([]);
     } catch (e) { Toast.error("Lưu IDS thất bại: " + ((e as Error).message || String(e))); }
     finally { setIdsSaving(false); }
