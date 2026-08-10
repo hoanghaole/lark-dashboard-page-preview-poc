@@ -386,7 +386,7 @@ function App() {
   const set = (k: keyof IFeedbackForm) => (v: any) => setForm(prev => ({ ...prev, [k]: v || "" }));
 
   const activeLabel = TABS.find(x => x.key === activeTab)?.label || "";
-  const isIds = activeTab === "ids";
+  const [idsOpen, setIdsOpen] = useState(false);
   const elapsed = meeting ? Object.values(meeting.tabMs).reduce((a, b) => a + b, 0) : 0;
   const fmt = (ms: number) => { const s = Math.floor(ms / 1000); return `${String(Math.floor(s / 3600)).padStart(2, "0")}:${String(Math.floor(s / 60) % 60).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; };
 
@@ -465,10 +465,7 @@ function App() {
         style={{ width: 60 }}
         selectedKeys={[activeTab]}
         onSelect={(e: any) => selectTab(String(e.itemKey))}
-        items={[
-          ...TABS.map(x => ({ itemKey: x.key, text: x.label, icon: x.icon })),
-          { itemKey: "ids", text: "IDS", icon: <IconList /> },
-        ]}
+        items={TABS.map(x => ({ itemKey: x.key, text: x.label, icon: x.icon }))}
       />
 
       {/* Main content */}
@@ -505,20 +502,21 @@ function App() {
       </div>
 
       {/* Read + Input side panel */}
-      {panelOpen && (isIds ? (
+      {idsOpen && (
       <div className="config-panel ids-panel">
         <div className="panel-row"><div className="panel-title"><strong>IDS</strong></div></div>
         <Form className="form">
           <div className="form-item"><Form.Label className="label">Identify — Vấn đề</Form.Label><TextArea value={idsForm.identify} onChange={v => setIdsForm(x => ({ ...x, identify: v }))} autosize placeholder="Vấn đề cần xử lý trong giao ban" className="input" /></div>
           <div className="form-item"><Form.Label className="label">Discuss — Thảo luận</Form.Label><TextArea value={idsForm.discuss} onChange={v => setIdsForm(x => ({ ...x, discuss: v }))} autosize placeholder="Dữ kiện, nguyên nhân, trao đổi" className="input" /></div>
           <div className="form-item"><Form.Label className="label">Solution — Giải pháp</Form.Label><TextArea value={idsForm.solution} onChange={v => setIdsForm(x => ({ ...x, solution: v }))} autosize placeholder="Giải pháp/quyết định chốt" className="input" /></div>
-          <div className="form-item"><Form.Label className="label">Phạm vi</Form.Label><Select value={idsForm.scope} style={{ width: "100%" }} onChange={v => setIdsForm(x => ({ ...x, scope: String(v) }))}><Select.Option value="Công ty">Công ty</Select.Option>{TABS.map(t => <Select.Option key={t.key} value={t.label}>{t.label}</Select.Option>)}</Select></div>
+          <div className="form-item"><Form.Label className="label">Phạm vi</Form.Label><div className="phongban-chip" style={{ backgroundColor: (TABS.find(x => x.key === activeTab)?.color || "#6b7280") + "22", color: TABS.find(x => x.key === activeTab)?.color || "#6b7280", borderColor: TABS.find(x => x.key === activeTab)?.color || "#6b7280" }}>{activeLabel}</div></div>
           <div className="form-item"><Form.Label className="label">Trạng thái</Form.Label><Select value={idsForm.status} style={{ width: "100%" }} onChange={v => setIdsForm(x => ({ ...x, status: String(v) }))}><Select.Option value="Mở">Mở</Select.Option><Select.Option value="Đã chốt">Đã chốt</Select.Option><Select.Option value="Theo dõi">Theo dõi</Select.Option></Select></div>
           <div className="form-item"><Form.Label className="label">Hành động</Form.Label>{idsActions.map((a, i) => <div className="ids-action" key={i}><Input value={a.hanhDong} placeholder="Hành động" onChange={v => setIdsActions(xs => xs.map((x, n) => n === i ? { ...x, hanhDong: v } : x))} /><Input value={a.nguoi} placeholder="Người phụ trách" onChange={v => setIdsActions(xs => xs.map((x, n) => n === i ? { ...x, nguoi: v } : x))} /><DatePicker value={a.deadline || undefined} placeholder="Deadline" onChange={(v: any) => setIdsActions(xs => xs.map((x, n) => n === i ? { ...x, deadline: v ? String(v) : "" } : x))} style={{ width: "100%" }} /><Button icon={<IconDelete />} theme="borderless" type="danger" onClick={() => setIdsActions(xs => xs.filter((_, n) => n !== i))} /></div>)}<Button icon={<IconPlus />} theme="borderless" onClick={() => setIdsActions(xs => [...xs, { ...EMPTY_ACTION }])} block>Thêm hành động</Button></div>
         </Form>
         <Button type="primary" theme="solid" className="btn" loading={idsSaving} onClick={saveIds} block>Lưu IDS</Button>
       </div>
-      ) : (
+      )}
+      {panelOpen && !idsOpen && (
       <div className="config-panel">
         <div className="panel-row">
           <div className="panel-title"><strong>Nhập phản hồi cửa hàng</strong></div>
@@ -623,10 +621,13 @@ function App() {
           </div>
         )}
       </div>
-      ))}
+      )}
 
       {/* Toggle side panel button */}
       <div style={{ flex: "none", display: "flex", flexDirection: "column", justifyContent: "flex-start", paddingTop: 8, borderLeft: "var(--line-color) 1px solid" }}>
+        <Popover content={idsOpen ? "Đóng IDS" : "Mở IDS"}>
+          <Button icon={<IconList />} onClick={() => setIdsOpen(o => !o)} theme="borderless" />
+        </Popover>
         <Popover content={panelOpen ? "Ẩn bảng nhập" : "Hiện bảng nhập"}>
           <Button icon={<IconSidebar />} onClick={() => setPanelOpen(o => !o)} theme="borderless" />
         </Popover>
