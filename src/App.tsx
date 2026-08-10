@@ -19,10 +19,10 @@ const MKT_BI_URL = "https://app.powerbi.com/view?r=eyJrIjoiODJjOWY4YTQtMWQ0OC00Y
 // Chưa có link riêng => dùng link chung; Ba gửi link từng phòng ban là điền vào đây.
 const TAB_BI_URL: Record<string, string> = {
   kinhdoanh: "https://app.powerbi.com/view?r=eyJrIjoiNzkyMzE5MmMtZjkyYi00M2JjLTlhNTQtMzI2NTk0YWFjZDUxIiwidCI6ImM0YzU5OTA3LWJlOGItNGIyYS1iMjI2LTgyZmE5MjIzZDc0MiIsImMiOjEwfQ%3D%3D",
-  dichvu: "https://app.powerbi.com/view?r=eyJrIjoiYmU2ZjRkZWUtYWYzZi00MzI4LTkwZTktMTQyY2IxNTczMWM3IiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
+  dichvu: "https://app.powerbi.com/view?r=eyJrIjoiMmVkNmM4MzctMGNmNC00NDU4LThhODQtNmJmZWU0YmUyM2I5IiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
   cr: DEFAULT_BI_URL,
   mkt: MKT_BI_URL,
-  hr: DEFAULT_BI_URL,
+  hr: "https://app.powerbi.com/view?r=eyJrIjoiMTQ0YjkwZjMtMDI0OS00YWZjLTliNTktZWE4MmRjNGU2YTBjIiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D&pageName=336b2363d608a5b85de6",
   ketoan: DEFAULT_BI_URL,
   hethong: DEFAULT_BI_URL,
 };
