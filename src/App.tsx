@@ -473,25 +473,13 @@ function App() {
 
       {/* Main content */}
       <div className="content-wrap">
-        <div className="panel-title meeting-header"><strong>{isIds ? "IDS" : activeLabel}</strong>
+        <div className="panel-title meeting-header"><strong>{activeLabel || "Dashboard"}</strong>
           <div className="meeting-controls">
             <Typography.Text strong>{meeting ? `${meeting.paused ? "Tea break" : "Đang họp"} · ${fmt(elapsed)}` : ""}</Typography.Text>
             {!meeting ? <Button theme="solid" type="primary" icon={<IconPlay />} onClick={() => { const now = Date.now(); setMeeting({ started: now, paused: false, tabMs: {}, lastTick: now }); }}>Bắt đầu họp</Button> : <Space><Button icon={<IconPause />} onClick={() => setMeeting(m => m ? { ...m, paused: !m.paused, lastTick: Date.now() } : m)}>{meeting.paused ? "Tiếp tục" : "Tea break"}</Button><Button type="danger" icon={<IconStop />} onClick={finishMeeting}>Kết thúc</Button></Space>}
           </div>
         </div>
         <div className="tabs-stage">
-          {isIds && <div className="ids-view">
-            <div className="ids-card"><Typography.Title heading={5}>Identify · Discuss · Solve</Typography.Title>
-              <Form className="form"><Form.Label className="label">Identify — Vấn đề</Form.Label><TextArea value={idsForm.identify} onChange={v => setIdsForm(x => ({ ...x, identify: v }))} autosize placeholder="Vấn đề cần xử lý trong giao ban" />
-                <Form.Label className="label">Discuss — Thảo luận</Form.Label><TextArea value={idsForm.discuss} onChange={v => setIdsForm(x => ({ ...x, discuss: v }))} autosize placeholder="Dữ kiện, nguyên nhân, trao đổi" />
-                <Form.Label className="label">Solution — Giải pháp</Form.Label><TextArea value={idsForm.solution} onChange={v => setIdsForm(x => ({ ...x, solution: v }))} autosize placeholder="Giải pháp/quyết định chốt" />
-                <div className="ids-grid"><Select value={idsForm.scope} onChange={v => setIdsForm(x => ({ ...x, scope: String(v) }))}><Select.Option value="Công ty">Công ty</Select.Option>{TABS.map(t => <Select.Option key={t.key} value={t.label}>{t.label}</Select.Option>)}</Select><Select value={idsForm.status} onChange={v => setIdsForm(x => ({ ...x, status: String(v) }))}><Select.Option value="Mở">Mở</Select.Option><Select.Option value="Đã chốt">Đã chốt</Select.Option><Select.Option value="Theo dõi">Theo dõi</Select.Option></Select></div>
-                <Form.Label className="label">Hành động</Form.Label>{idsActions.map((a, i) => <div className="ids-action" key={i}><Input value={a.hanhDong} placeholder="Hành động" onChange={v => setIdsActions(xs => xs.map((x, n) => n === i ? { ...x, hanhDong: v } : x))} /><Input value={a.nguoi} placeholder="Người phụ trách" onChange={v => setIdsActions(xs => xs.map((x, n) => n === i ? { ...x, nguoi: v } : x))} /><DatePicker value={a.deadline || undefined} placeholder="Deadline" onChange={(v: any) => setIdsActions(xs => xs.map((x, n) => n === i ? { ...x, deadline: v ? String(v) : "" } : x))} /><Button icon={<IconDelete />} theme="borderless" type="danger" onClick={() => setIdsActions(xs => xs.filter((_, n) => n !== i))} /></div>)}
-                <Button icon={<IconPlus />} theme="borderless" onClick={() => setIdsActions(xs => [...xs, { ...EMPTY_ACTION }])}>Thêm hành động</Button>
-                <Button type="primary" theme="solid" loading={idsSaving} onClick={saveIds}>Lưu IDS</Button>
-              </Form>
-            </div>
-          </div>}
           {TABS.map((tab) => {
             const url = TAB_BI_URL[tab.key] || DEFAULT_BI_URL;
             const active = tab.key === activeTab;
@@ -517,7 +505,20 @@ function App() {
       </div>
 
       {/* Read + Input side panel */}
-      {panelOpen && !isIds && (
+      {panelOpen && (isIds ? (
+      <div className="config-panel ids-panel">
+        <div className="panel-row"><div className="panel-title"><strong>IDS</strong></div></div>
+        <Form className="form">
+          <div className="form-item"><Form.Label className="label">Identify — Vấn đề</Form.Label><TextArea value={idsForm.identify} onChange={v => setIdsForm(x => ({ ...x, identify: v }))} autosize placeholder="Vấn đề cần xử lý trong giao ban" className="input" /></div>
+          <div className="form-item"><Form.Label className="label">Discuss — Thảo luận</Form.Label><TextArea value={idsForm.discuss} onChange={v => setIdsForm(x => ({ ...x, discuss: v }))} autosize placeholder="Dữ kiện, nguyên nhân, trao đổi" className="input" /></div>
+          <div className="form-item"><Form.Label className="label">Solution — Giải pháp</Form.Label><TextArea value={idsForm.solution} onChange={v => setIdsForm(x => ({ ...x, solution: v }))} autosize placeholder="Giải pháp/quyết định chốt" className="input" /></div>
+          <div className="form-item"><Form.Label className="label">Phạm vi</Form.Label><Select value={idsForm.scope} style={{ width: "100%" }} onChange={v => setIdsForm(x => ({ ...x, scope: String(v) }))}><Select.Option value="Công ty">Công ty</Select.Option>{TABS.map(t => <Select.Option key={t.key} value={t.label}>{t.label}</Select.Option>)}</Select></div>
+          <div className="form-item"><Form.Label className="label">Trạng thái</Form.Label><Select value={idsForm.status} style={{ width: "100%" }} onChange={v => setIdsForm(x => ({ ...x, status: String(v) }))}><Select.Option value="Mở">Mở</Select.Option><Select.Option value="Đã chốt">Đã chốt</Select.Option><Select.Option value="Theo dõi">Theo dõi</Select.Option></Select></div>
+          <div className="form-item"><Form.Label className="label">Hành động</Form.Label>{idsActions.map((a, i) => <div className="ids-action" key={i}><Input value={a.hanhDong} placeholder="Hành động" onChange={v => setIdsActions(xs => xs.map((x, n) => n === i ? { ...x, hanhDong: v } : x))} /><Input value={a.nguoi} placeholder="Người phụ trách" onChange={v => setIdsActions(xs => xs.map((x, n) => n === i ? { ...x, nguoi: v } : x))} /><DatePicker value={a.deadline || undefined} placeholder="Deadline" onChange={(v: any) => setIdsActions(xs => xs.map((x, n) => n === i ? { ...x, deadline: v ? String(v) : "" } : x))} style={{ width: "100%" }} /><Button icon={<IconDelete />} theme="borderless" type="danger" onClick={() => setIdsActions(xs => xs.filter((_, n) => n !== i))} /></div>)}<Button icon={<IconPlus />} theme="borderless" onClick={() => setIdsActions(xs => [...xs, { ...EMPTY_ACTION }])} block>Thêm hành động</Button></div>
+        </Form>
+        <Button type="primary" theme="solid" className="btn" loading={idsSaving} onClick={saveIds} block>Lưu IDS</Button>
+      </div>
+      ) : (
       <div className="config-panel">
         <div className="panel-row">
           <div className="panel-title"><strong>Nhập phản hồi cửa hàng</strong></div>
@@ -622,7 +623,7 @@ function App() {
           </div>
         )}
       </div>
-      )}
+      ))}
 
       {/* Toggle side panel button */}
       <div style={{ flex: "none", display: "flex", flexDirection: "column", justifyContent: "flex-start", paddingTop: 8, borderLeft: "var(--line-color) 1px solid" }}>
