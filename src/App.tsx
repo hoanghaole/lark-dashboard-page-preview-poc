@@ -14,7 +14,7 @@ interface IPreviewConfig {
   url: string;
 }
 
-const DEFAULT_BI_URL = "https://app.powerbi.com/view?r=eyJrIjoiODhmMzFlYTktMGNhNC00NDYyLWJhNjQtZmRiMjRhNzk4MTEzIiwidCI6ImM0YzU5OTA3LWJlOGItNGIyYS1iMjI2LTgyZmE5MjIzZDc0MiIsImMiOjEwfQ%3D%3D";
+const DEFAULT_BI_URL = "https://app.powerbi.com/view?r=eyJrIjoiZjlhMGQ4NzctNDU1MC00MDJmLWFiN2MtMjEzN2M0YmM3MGY4IiwidCI6ImM0YzU5OTA3LWJlOGItNGIyYS1iMjI2LTgyZmE5MjIzZDc0MiIsImMiOjEwfQ%3D%3D";
 const MKT_BI_URL = "https://app.powerbi.com/view?r=eyJrIjoiODJjOWY4YTQtMWQ0OC00YmNmLThiYzMtNWM2YWRlNGQyYmQ1IiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D&pageName=b6332825f273b36e2d1f";
 // Chưa có link riêng => dùng link chung; Ba gửi link từng phòng ban là điền vào đây.
 const TAB_BI_URL: Record<string, string> = {
