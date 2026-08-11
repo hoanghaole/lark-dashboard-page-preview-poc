@@ -18,9 +18,9 @@ function cli(args, input) {
   if (!o.ok) throw new Error(JSON.stringify(o));
   return o.data;
 }
-function records(table, fields) {
-  const filter = JSON.stringify({ logic: 'and', conditions: [['Meeting ID', '==', meetingId]] });
-  const args = ['base','+record-list','--base-token',BASE_TOKEN,'--table-id',table,'--filter-json',filter,'--limit','200'];
+function records(table, fields, filterByMeeting = true) {
+  const args = ['base','+record-list','--base-token',BASE_TOKEN,'--table-id',table,'--limit','200'];
+  if (filterByMeeting) args.push('--filter-json', JSON.stringify({ logic: 'and', conditions: [['Meeting ID', '==', meetingId]] }));
   for (const f of fields) args.push('--field-id', f);
   const data = cli(args);
   return data.items || data.records || [];
@@ -42,7 +42,7 @@ if (val(log.fields, 'Minutes generated') === 'true' || val(log.fields, 'Minutes 
   process.exit(0);
 }
 const ids = records(TABLE_IDS, ['Meeting ID','Mã IDS','Ngày họp','Identify','Discuss','Solution','Phạm vi','Trạng thái']);
-const actions = records(TABLE_ACTIONS, ['Hành động','Người phụ trách','Deadline','Nguồn','Mã nguồn']);
+const actions = records(TABLE_ACTIONS, ['Hành động','Người phụ trách','Deadline','Nguồn','Mã nguồn'], false);
 const idsByCode = new Set(ids.map(r => val(r.fields, 'Mã IDS')));
 const relatedActions = actions.filter(r => idsByCode.has(val(r.fields, 'Mã nguồn')));
 
