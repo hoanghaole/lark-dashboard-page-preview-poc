@@ -22,7 +22,7 @@ const TAB_BI_URL: Record<string, string> = {
   dichvu: "https://app.powerbi.com/view?r=eyJrIjoiMmVkNmM4MzctMGNmNC00NDU4LThhODQtNmJmZWU0YmUyM2I5IiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
   cr: DEFAULT_BI_URL,
   mkt: MKT_BI_URL,
-  hr: "https://app.powerbi.com/view?r=eyJrIjoiMTQ0YjkwZjMtMDI0OS00YWZjLTliNTktZWE4MmRjNGU2YTBjIiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D&pageName=336b2363d608a5b85de6",
+  hr: "https://app.powerbi.com/view?r=eyJrIjoiN2I1MDFjZmQtMzdhYi00MWQ5LWI0NjMtZWQzYjZkYjVkMjY4IiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
   ketoan: DEFAULT_BI_URL,
   hethong: DEFAULT_BI_URL,
 };
