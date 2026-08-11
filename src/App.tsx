@@ -15,12 +15,12 @@ interface IPreviewConfig {
 }
 
 const DEFAULT_BI_URL = "https://app.powerbi.com/view?r=eyJrIjoiZjlhMGQ4NzctNDU1MC00MDJmLWFiN2MtMjEzN2M0YmM3MGY4IiwidCI6ImM0YzU5OTA3LWJlOGItNGIyYS1iMjI2LTgyZmE5MjIzZDc0MiIsImMiOjEwfQ%3D%3D";
-const MKT_BI_URL = "https://app.powerbi.com/view?r=eyJrIjoiODJjOWY4YTQtMWQ0OC00YmNmLThiYzMtNWM2YWRlNGQyYmQ1IiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D&pageName=b6332825f273b36e2d1f";
+const MKT_BI_URL = "https://app.powerbi.com/view?r=eyJrIjoiMzkxM2Q2ZTEtMTg0Yy00NTJjLWFlYmUtOTZkYzQ4NWZmOGZhIiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D";
 // Chưa có link riêng => dùng link chung; Ba gửi link từng phòng ban là điền vào đây.
 const TAB_BI_URL: Record<string, string> = {
   kinhdoanh: "https://app.powerbi.com/view?r=eyJrIjoiNzkyMzE5MmMtZjkyYi00M2JjLTlhNTQtMzI2NTk0YWFjZDUxIiwidCI6ImM0YzU5OTA3LWJlOGItNGIyYS1iMjI2LTgyZmE5MjIzZDc0MiIsImMiOjEwfQ%3D%3D",
   dichvu: "https://app.powerbi.com/view?r=eyJrIjoiMmVkNmM4MzctMGNmNC00NDU4LThhODQtNmJmZWU0YmUyM2I5IiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
-  cr: DEFAULT_BI_URL,
+  cr: "https://app.powerbi.com/view?r=eyJrIjoiY2MwNzkxMmEtMjE4Yy00OWVlLTgzZGMtNzZiYmU2MjlmNDJhIiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
   mkt: MKT_BI_URL,
   hr: "https://app.powerbi.com/view?r=eyJrIjoiN2I1MDFjZmQtMzdhYi00MWQ5LWI0NjMtZWQzYjZkYjVkMjY4IiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
   ketoan: DEFAULT_BI_URL,
