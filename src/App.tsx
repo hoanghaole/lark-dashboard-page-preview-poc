@@ -187,6 +187,7 @@ function App() {
   const [idsForm, setIdsForm] = useState({ meetingId: "", identify: "", discuss: "", solution: "", scope: "Công ty", status: "Mở" });
   const [idsActions, setIdsActions] = useState<IActionItem[]>([]);
   const [idsSaving, setIdsSaving] = useState(false);
+  const [minutes, setMinutes] = useState<{ title: string; meetingId: string; started: number; ended: number; duration: string; tabs: string; ids: { code: string; identify: string; discuss: string; solution: string; scope: string; status: string }[] } | null>(null);
 
   const isCreate = dashboard.state === DashboardState.Create;
   const isConfig = dashboard.state === DashboardState.Config || isCreate;
@@ -435,16 +436,36 @@ function App() {
 
   const finishMeeting = async () => {
     if (!meeting) return;
+    const ended = Date.now();
     try {
       const table = await bitable.base.getTableById(TABLE_ID_MEETING_LOG);
       const meta = await table.getFieldMetaList();
-      const values: Record<string, unknown> = { "Meeting ID": meeting.id, "Bắt đầu": meeting.started, "Kết thúc": Date.now(), "Tổng thời lượng": Math.round(elapsed / 1000), "Chi tiết tab": Object.entries(meeting.tabMs).map(([k, v]) => `${TABS.find(t => t.key === k)?.label || k}: ${fmt(v)}`).join(" | ") };
+      const tabs = Object.entries(meeting.tabMs).map(([k, v]) => `${TABS.find(t => t.key === k)?.label || k}: ${fmt(v)}`).join(" | ");
+      const values: Record<string, unknown> = { "Meeting ID": meeting.id, "Bắt đầu": meeting.started, "Kết thúc": ended, "Tổng thời lượng": Math.round(elapsed / 1000), "Chi tiết tab": tabs };
       const fields: Record<string, unknown> = {};
       for (const f of meta as any[]) if (values[f.name] !== undefined) fields[f.id] = values[f.name];
       await table.addRecord({ fields } as any);
-      Toast.success("Đã lưu nhật ký họp");
+      const idsTable = await bitable.base.getTableById(TABLE_ID_IDS);
+      const idsMeta = await idsTable.getFieldMetaList();
+      const idsResult = await idsTable.getRecords({ pageSize: 200 } as any);
+      const field = (record: any, name: string) => {
+        const id = (idsMeta as any[]).find(f => f.name === name)?.id;
+        const value = record.fields?.[id] ?? record.fields?.[name] ?? "";
+        return Array.isArray(value) ? value.map(v => v?.text ?? v?.name ?? v).join(", ") : typeof value === "object" ? value?.text ?? value?.name ?? "" : String(value);
+      };
+      const ids = ((idsResult as any).records || []).filter((r: any) => field(r, "Meeting ID") === meeting.id).map((r: any) => ({ code: field(r, "Mã IDS"), identify: field(r, "Identify"), discuss: field(r, "Discuss"), solution: field(r, "Solution"), scope: field(r, "Phạm vi"), status: field(r, "Trạng thái") }));
+      setMinutes({ title: `Biên bản họp ${meeting.id}`, meetingId: meeting.id, started: meeting.started, ended, duration: fmt(elapsed), tabs, ids });
+      Toast.success("Đã lưu nhật ký. Biên bản đã mở để review.");
     } catch (e) { Toast.error("Lưu nhật ký thất bại: " + ((e as Error).message || String(e))); }
     setMeeting(null);
+  };
+
+  const downloadMinutes = () => {
+    if (!minutes) return;
+    const esc = (s: string) => s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+    const rows = minutes.ids.length ? minutes.ids.map(i => `<tr><td>${esc(i.code || "Chưa xác định")}</td><td>${esc(i.scope || "Chưa xác định")}</td><td>${esc(i.identify || "Chưa xác định")}</td><td>${esc(i.discuss || "Chưa xác định")}</td><td>${esc(i.solution || "Chưa xác định")}</td><td>${esc(i.status || "Chưa xác định")}</td></tr>`).join("") : "<tr><td colspan=\"6\">Chưa có IDS trong cuộc họp.</td></tr>";
+    const html = `<html><head><meta charset=\"utf-8\"><style>body{font-family:Arial;padding:32px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:8px;text-align:left}th{background:#eee}</style></head><body><h1>${esc(minutes.title)}</h1><p><b>Meeting ID:</b> ${esc(minutes.meetingId)}</p><p><b>Bắt đầu:</b> ${new Date(minutes.started).toLocaleString("vi-VN")}<br><b>Kết thúc:</b> ${new Date(minutes.ended).toLocaleString("vi-VN")}<br><b>Thời lượng:</b> ${esc(minutes.duration)}<br><b>Chi tiết tab:</b> ${esc(minutes.tabs || "Chưa xác định")}</p><h2>IDS</h2><table><thead><tr><th>Mã IDS</th><th>Phạm vi</th><th>Identify</th><th>Discuss</th><th>Solution</th><th>Trạng thái</th></tr></thead><tbody>${rows}</tbody></table><p><i>Trường thiếu được ghi “Chưa xác định”, không tự suy diễn quyết định.</i></p></body></html>`;
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([html], { type: "application/msword" })); a.download = `${minutes.meetingId}-bien-ban.doc`; a.click(); URL.revokeObjectURL(a.href);
   };
 
   useEffect(() => {
@@ -520,6 +541,15 @@ function App() {
         <Button type="primary" theme="solid" className="btn" loading={idsSaving} onClick={saveIds} block>Lưu IDS</Button>
       </div>
       )}
+      <SideSheet visible={Boolean(minutes)} title={minutes?.title || "Biên bản họp"} width={760} onCancel={() => setMinutes(null)} footer={<Space><Button onClick={() => setMinutes(null)}>Đóng</Button><Button type="primary" theme="solid" onClick={downloadMinutes}>Tải file .doc để review</Button></Space>}>
+        {minutes && <>
+          <Typography.Title heading={4}>Thông tin cuộc họp</Typography.Title>
+          <p><b>Meeting ID:</b> {minutes.meetingId}</p><p><b>Bắt đầu:</b> {new Date(minutes.started).toLocaleString("vi-VN")}<br/><b>Kết thúc:</b> {new Date(minutes.ended).toLocaleString("vi-VN")}<br/><b>Thời lượng:</b> {minutes.duration}<br/><b>Chi tiết tab:</b> {minutes.tabs || "Chưa xác định"}</p>
+          <Typography.Title heading={4}>IDS</Typography.Title>
+          {minutes.ids.length ? minutes.ids.map((i, n) => <div key={`${i.code}-${n}`} className="record-card"><b>{i.code || "Chưa xác định"} · {i.scope || "Chưa xác định"}</b><p><b>Identify:</b> {i.identify || "Chưa xác định"}</p><p><b>Discuss:</b> {i.discuss || "Chưa xác định"}</p><p><b>Solution:</b> {i.solution || "Chưa xác định"}</p><p><b>Trạng thái:</b> {i.status || "Chưa xác định"}</p></div>) : <Typography.Text type="tertiary">Chưa có IDS trong cuộc họp.</Typography.Text>}
+          <Typography.Text type="tertiary">Bản này lấy dữ liệu IDS theo Meeting ID; trường thiếu ghi “Chưa xác định”.</Typography.Text>
+        </>}
+      </SideSheet>
       {panelOpen && !idsOpen && (
       <div className="config-panel">
         <div className="panel-row">
