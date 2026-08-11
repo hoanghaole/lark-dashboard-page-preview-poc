@@ -183,8 +183,8 @@ function App() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dbg, setDbg] = useState<string>("");
-  const [meeting, setMeeting] = useState<{ started: number; paused: boolean; tabMs: Record<string, number>; lastTick: number } | null>(null);
-  const [idsForm, setIdsForm] = useState({ identify: "", discuss: "", solution: "", scope: "Công ty", status: "Mở" });
+  const [meeting, setMeeting] = useState<{ id: string; started: number; paused: boolean; tabMs: Record<string, number>; lastTick: number } | null>(null);
+  const [idsForm, setIdsForm] = useState({ meetingId: "", identify: "", discuss: "", solution: "", scope: "Công ty", status: "Mở" });
   const [idsActions, setIdsActions] = useState<IActionItem[]>([]);
   const [idsSaving, setIdsSaving] = useState(false);
 
@@ -410,7 +410,7 @@ function App() {
       const table = await bitable.base.getTableById(TABLE_ID_IDS);
       const meta = await table.getFieldMetaList();
       const ids: Record<string, unknown> = {};
-      const values: Record<string, unknown> = { Identify: idsForm.identify.trim(), Discuss: idsForm.discuss.trim(), Solution: idsForm.solution.trim(), "Phạm vi": idsForm.scope, "Trạng thái": idsForm.status, "Mã IDS": `IDS-${Date.now()}`, "Ngày họp": Date.now() };
+      const values: Record<string, unknown> = { "Meeting ID": idsForm.meetingId.trim() || (meeting?.id ?? ""), Identify: idsForm.identify.trim(), Discuss: idsForm.discuss.trim(), Solution: idsForm.solution.trim(), "Phạm vi": idsForm.scope, "Trạng thái": idsForm.status, "Mã IDS": `IDS-${Date.now()}`, "Ngày họp": Date.now() };
       for (const f of meta as any[]) if (values[f.name] !== undefined) ids[f.id] = values[f.name];
       await table.addRecord({ fields: ids } as any);
       const validActions = idsActions.filter(a => a.hanhDong.trim());
@@ -427,7 +427,7 @@ function App() {
         }
       }
       Toast.success("Đã lưu IDS");
-      setIdsForm({ identify: "", discuss: "", solution: "", scope: activeLabel, status: "Mở" });
+      setIdsForm({ meetingId: meeting?.id ?? "", identify: "", discuss: "", solution: "", scope: activeLabel, status: "Mở" });
       setIdsActions([]);
     } catch (e) { Toast.error("Lưu IDS thất bại: " + ((e as Error).message || String(e))); }
     finally { setIdsSaving(false); }
@@ -438,7 +438,7 @@ function App() {
     try {
       const table = await bitable.base.getTableById(TABLE_ID_MEETING_LOG);
       const meta = await table.getFieldMetaList();
-      const values: Record<string, unknown> = { "Meeting ID": `MEET-${meeting.started}`, "Bắt đầu": meeting.started, "Kết thúc": Date.now(), "Tổng thời lượng": Math.round(elapsed / 1000), "Chi tiết tab": Object.entries(meeting.tabMs).map(([k, v]) => `${TABS.find(t => t.key === k)?.label || k}: ${fmt(v)}`).join(" | ") };
+      const values: Record<string, unknown> = { "Meeting ID": meeting.id, "Bắt đầu": meeting.started, "Kết thúc": Date.now(), "Tổng thời lượng": Math.round(elapsed / 1000), "Chi tiết tab": Object.entries(meeting.tabMs).map(([k, v]) => `${TABS.find(t => t.key === k)?.label || k}: ${fmt(v)}`).join(" | ") };
       const fields: Record<string, unknown> = {};
       for (const f of meta as any[]) if (values[f.name] !== undefined) fields[f.id] = values[f.name];
       await table.addRecord({ fields } as any);
@@ -477,7 +477,7 @@ function App() {
         <div className="panel-title meeting-header"><strong>{activeLabel || "Dashboard"}</strong>
           <div className="meeting-controls">
             <Typography.Text strong>{meeting ? `${meeting.paused ? "Tea break" : "Đang họp"} · ${fmt(elapsed)}` : ""}</Typography.Text>
-            {!meeting ? <Button theme="solid" type="primary" icon={<IconPlay />} onClick={() => { const now = Date.now(); setMeeting({ started: now, paused: false, tabMs: {}, lastTick: now }); }}>Bắt đầu họp</Button> : <Space><Button icon={<IconPause />} onClick={() => setMeeting(m => m ? { ...m, paused: !m.paused, lastTick: Date.now() } : m)}>{meeting.paused ? "Tiếp tục" : "Tea break"}</Button><Button type="danger" icon={<IconStop />} onClick={finishMeeting}>Kết thúc</Button></Space>}
+            {!meeting ? <Button theme="solid" type="primary" icon={<IconPlay />} onClick={() => { const now = Date.now(); const id = `MEET-${now}`; setMeeting({ id, started: now, paused: false, tabMs: {}, lastTick: now }); setIdsForm(x => ({ ...x, meetingId: id })); }}>Bắt đầu họp</Button> : <Space><Button icon={<IconPause />} onClick={() => setMeeting(m => m ? { ...m, paused: !m.paused, lastTick: Date.now() } : m)}>{meeting.paused ? "Tiếp tục" : "Tea break"}</Button><Button type="danger" icon={<IconStop />} onClick={finishMeeting}>Kết thúc</Button></Space>}
           </div>
         </div>
         <div className="tabs-stage">
