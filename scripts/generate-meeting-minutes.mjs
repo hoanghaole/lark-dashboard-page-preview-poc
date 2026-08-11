@@ -6,6 +6,7 @@ const BASE_TOKEN = process.env.BASE_TOKEN || 'HdqfbQnYgaNmOJsDJNdlKVmCg4c';
 const TABLE_IDS = 'tbl62pWCfKLMEHjQ';
 const TABLE_ACTIONS = 'tblZFnTjYHIjNJAF';
 const TABLE_LOG = 'tbldtBstrl16TXgJ';
+const MINUTES_FOLDER_TOKEN = 'G8m4fC77GlrUNBdzKkSl3gHqgIh';
 const meetingId = process.argv[2];
 if (!meetingId) throw new Error('Usage: generate-meeting-minutes.mjs <Meeting ID>');
 
@@ -52,7 +53,7 @@ const actionRows = relatedActions.length ? relatedActions.map(r => `<tr><td>${es
 const xml = `<title>${esc(title)}</title><p><b>Meeting ID:</b> ${esc(meetingId)}</p><p><b>Thời lượng:</b> ${esc(val(log.fields,'Tổng thời lượng'))} giây</p><p><b>Chi tiết tab:</b> ${esc(val(log.fields,'Chi tiết tab') || 'Chưa xác định')}</p><h1>IDS</h1><table><thead><tr><th>Mã IDS</th><th>Phạm vi</th><th>Identify</th><th>Discuss</th><th>Solution</th><th>Trạng thái</th></tr></thead><tbody>${idsRows}</tbody></table><h1>Action items</h1><table><thead><tr><th>Hành động</th><th>Người phụ trách</th><th>Deadline</th><th>Mã nguồn</th></tr></thead><tbody>${actionRows}</tbody></table><p><b>Ghi chú:</b> Biên bản tạo từ dữ liệu IDS. Trường thiếu được ghi là “Chưa xác định”, không tự suy diễn quyết định.</p>`;
 const file = `.minutes-${meetingId}.xml`;
 writeFileSync(file, xml);
-const doc = cli(['docs','+create','--content',`@${file}`]).document;
+const doc = cli(['docs','+create','--parent-token',MINUTES_FOLDER_TOKEN,'--content',`@${file}`]).document;
 unlinkSync(file);
 const url = doc.url;
 const logId = log.record_id || log.recordId || log.id;

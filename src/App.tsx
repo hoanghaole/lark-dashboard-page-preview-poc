@@ -38,6 +38,7 @@ const DEFAULT_URL = (() => {
 
 const BASE_TOKEN = "HdqfbQnYgaNmOJsDJNdlKVmCg4c";
 const TABLE_ID = "tbl5VbzzomDFdAfn";
+const MINUTES_API_URL = "/api/meeting-minutes";
 
 const TABS = [
   { key: "hethong", label: "Hệ thống", icon: <IconSetting />, color: "#5a6472" },
@@ -187,7 +188,7 @@ function App() {
   const [idsForm, setIdsForm] = useState({ meetingId: "", identify: "", discuss: "", solution: "", scope: "Công ty", status: "Mở" });
   const [idsActions, setIdsActions] = useState<IActionItem[]>([]);
   const [idsSaving, setIdsSaving] = useState(false);
-  const [minutes, setMinutes] = useState<{ title: string; meetingId: string; started: number; ended: number; duration: string; tabs: string; ids: { code: string; identify: string; discuss: string; solution: string; scope: string; status: string }[] } | null>(null);
+  const [minutes, setMinutes] = useState<{ title: string; meetingId: string; started: number; ended: number; duration: string; tabs: string; ids: { code: string; identify: string; discuss: string; solution: string; scope: string; status: string }[]; url?: string } | null>(null);
 
   const isCreate = dashboard.state === DashboardState.Create;
   const isConfig = dashboard.state === DashboardState.Config || isCreate;
@@ -454,19 +455,22 @@ function App() {
         return Array.isArray(value) ? value.map(v => v?.text ?? v?.name ?? v).join(", ") : typeof value === "object" ? value?.text ?? value?.name ?? "" : String(value);
       };
       const ids = ((idsResult as any).records || []).filter((r: any) => field(r, "Meeting ID") === meeting.id).map((r: any) => ({ code: field(r, "Mã IDS"), identify: field(r, "Identify"), discuss: field(r, "Discuss"), solution: field(r, "Solution"), scope: field(r, "Phạm vi"), status: field(r, "Trạng thái") }));
-      setMinutes({ title: `Biên bản họp ${meeting.id}`, meetingId: meeting.id, started: meeting.started, ended, duration: fmt(elapsed), tabs, ids });
-      Toast.success("Đã lưu nhật ký. Biên bản đã mở để review.");
+      const minutesData = { title: `Biên bản họp ${meeting.id}`, meetingId: meeting.id, started: meeting.started, ended, duration: fmt(elapsed), tabs, ids };
+      let url = "";
+      try {
+        const response = await fetch(MINUTES_API_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(minutesData) });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        url = String((await response.json()).url || "");
+      } catch (docError) {
+        console.warn("meeting minutes document error", docError);
+        Toast.warning("Đã lưu nhật ký; chưa tạo được Lark Doc. Có thể mở lại sau.");
+      }
+      setMinutes({ ...minutesData, url });
+      Toast.success(url ? "Đã lưu và tạo biên bản Lark Doc." : "Đã lưu nhật ký cuộc họp.");
     } catch (e) { Toast.error("Lưu nhật ký thất bại: " + ((e as Error).message || String(e))); }
     setMeeting(null);
   };
 
-  const downloadMinutes = () => {
-    if (!minutes) return;
-    const esc = (s: string) => s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-    const rows = minutes.ids.length ? minutes.ids.map(i => `<tr><td>${esc(i.code || "Chưa xác định")}</td><td>${esc(i.scope || "Chưa xác định")}</td><td>${esc(i.identify || "Chưa xác định")}</td><td>${esc(i.discuss || "Chưa xác định")}</td><td>${esc(i.solution || "Chưa xác định")}</td><td>${esc(i.status || "Chưa xác định")}</td></tr>`).join("") : "<tr><td colspan=\"6\">Chưa có IDS trong cuộc họp.</td></tr>";
-    const html = `<html><head><meta charset=\"utf-8\"><style>body{font-family:Arial;padding:32px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:8px;text-align:left}th{background:#eee}</style></head><body><h1>${esc(minutes.title)}</h1><p><b>Meeting ID:</b> ${esc(minutes.meetingId)}</p><p><b>Bắt đầu:</b> ${new Date(minutes.started).toLocaleString("vi-VN")}<br><b>Kết thúc:</b> ${new Date(minutes.ended).toLocaleString("vi-VN")}<br><b>Thời lượng:</b> ${esc(minutes.duration)}<br><b>Chi tiết tab:</b> ${esc(minutes.tabs || "Chưa xác định")}</p><h2>IDS</h2><table><thead><tr><th>Mã IDS</th><th>Phạm vi</th><th>Identify</th><th>Discuss</th><th>Solution</th><th>Trạng thái</th></tr></thead><tbody>${rows}</tbody></table><p><i>Trường thiếu được ghi “Chưa xác định”, không tự suy diễn quyết định.</i></p></body></html>`;
-    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([html], { type: "application/msword" })); a.download = `${minutes.meetingId}-bien-ban.doc`; a.click(); URL.revokeObjectURL(a.href);
-  };
 
   useEffect(() => {
     const pending = TABS.filter(tab => !mountedTabs.has(tab.key));
@@ -541,7 +545,7 @@ function App() {
         <Button type="primary" theme="solid" className="btn" loading={idsSaving} onClick={saveIds} block>Lưu IDS</Button>
       </div>
       )}
-      <SideSheet visible={Boolean(minutes)} title={minutes?.title || "Biên bản họp"} width={760} onCancel={() => setMinutes(null)} footer={<Space><Button onClick={() => setMinutes(null)}>Đóng</Button><Button type="primary" theme="solid" onClick={downloadMinutes}>Tải file .doc để review</Button></Space>}>
+      <SideSheet visible={Boolean(minutes)} title={minutes?.title || "Biên bản họp"} width={760} onCancel={() => setMinutes(null)} footer={<Space><Button onClick={() => setMinutes(null)}>Đóng</Button>{minutes?.url ? <Button theme="solid" type="primary" onClick={() => window.open(minutes.url, "_blank", "noopener,noreferrer")}>Mở biên bản Lark Doc</Button> : null}</Space>}>
         {minutes && <>
           <Typography.Title heading={4}>Thông tin cuộc họp</Typography.Title>
           <p><b>Meeting ID:</b> {minutes.meetingId}</p><p><b>Bắt đầu:</b> {new Date(minutes.started).toLocaleString("vi-VN")}<br/><b>Kết thúc:</b> {new Date(minutes.ended).toLocaleString("vi-VN")}<br/><b>Thời lượng:</b> {minutes.duration}<br/><b>Chi tiết tab:</b> {minutes.tabs || "Chưa xác định"}</p>
