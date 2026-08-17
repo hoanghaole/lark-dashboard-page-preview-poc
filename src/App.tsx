@@ -23,7 +23,7 @@ const TAB_BI_URL: Record<string, string> = {
   cr: "https://app.powerbi.com/view?r=eyJrIjoiY2MwNzkxMmEtMjE4Yy00OWVlLTgzZGMtNzZiYmU2MjlmNDJhIiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
   mkt: MKT_BI_URL,
   hr: "https://app.powerbi.com/view?r=eyJrIjoiN2I1MDFjZmQtMzdhYi00MWQ5LWI0NjMtZWQzYjZkYjVkMjY4IiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
-  ketoan: DEFAULT_BI_URL,
+  ketoan: "https://app.powerbi.com/view?r=eyJrIjoiYTJmNDIxNmEtNzY0Yy00ZjQyLWE1MDAtOGFhYmNjMjNkY2MyIiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
   hethong: DEFAULT_BI_URL,
 };
 
@@ -52,86 +52,78 @@ const TABS = [
 
 type IKpiGroup = { label: string; options: { value: string; label: string }[] };
 
-const SERVICE_KPI_GROUPS: IKpiGroup[] = [
+const KPI_GROUPS: IKpiGroup[] = [
   {
-    label: "1. Dịch vụ",
+    label: "1. Kết quả kinh doanh & dịch vụ",
     options: [
-      "1.01. Lượt xe dịch vụ",
-      "1.02. Lượt xe KTĐK",
-      "1.03. Lượt xe Sửa chữa",
-      "1.04. Lượt xe Tự nhiên",
-      "1.05. Doanh thu dịch vụ",
-      "1.06. Doanh thu PT HVN",
-      "1.07. Doanh thu Tiền công",
-      "1.08. Doanh thu DV Phụ",
-      "1.09. Doanh thu tiền dịch vụ phụ bình quân/xe",
-      "1.10. Hệ số tồn kho (không tính Rank E lâu năm)",
-      "1.11. Tỷ trọng tồn kho Rank A",
-      "1.12. Tỷ trọng tồn kho Rank B",
-      "1.13. Tỷ trọng tồn kho Rank C",
-      "1.14. Tỷ trọng tồn kho Rank D",
-      "1.15. Tỷ trọng tồn kho Rank E",
-      "1.16. Tổng tiền tồn kho lâu năm",
-      "1.17. Tỷ lệ tồn đơn hàng sau 3 tháng",
-      "1.18. Tỷ lệ tồn đơn hàng sau 6 tháng",
+      "1.01 Tổng doanh thu",
+      "1.02 Số lượng xe lẻ",
+      "1.03 Số lượng xe sỉ",
+      "1.04 Tổng doanh thu lẻ",
+      "1.05 Tổng doanh thu sỉ",
+      "1.06 Tổng doanh thu góp",
+      "1.07 Tổng doanh thu phụ kiện",
+      "1.08 Tồn kho bán hàng",
+      "1.09 Tổng doanh thu dịch vụ phụ tùng",
+      "1.10 Tổng doanh thu DVPT bình quân/lượt xe",
+      "1.11 Số lượt xe",
+      "1.12 Doanh thu phụ tùng",
+      "1.13 Tiền công",
+      "1.14 Dịch vụ phụ",
+      "1.15 Hệ số tồn kho (không tính Rank E lâu năm)",
+      "1.16 Tỷ trọng tồn kho Rank E",
+      "1.17 Tổng Tiền Tồn Kho",
+      "1.18 Ngân sách",
+      "1.19 Chi phí MKT",
+      "1.20 Hoạt động bán góp",
+      "1.21 Chỉ số thực hiện kế hoạch PKD",
+      "1.22 Chỉ số thực hiện kế hoạch PDVPT",
     ].map(label => ({ value: label, label })),
   },
   {
-    label: "2. Trải nghiệm khách hàng",
-    options: ["2.1. CSI", "2.2. NPS", "2.3. CSAT", "2.4. Khen", "2.5. Góp ý", "2.6. Khiếu nại"].map(label => ({ value: label, label })),
-  },
-  {
-    label: "3. Vận hành",
-    options: ["3.1. Top công ty - dịch vụ", "3.2. Hệ thống văn bản", "3.4. Công nghệ"].map(label => ({ value: label, label })),
-  },
-  {
-    label: "4. Con người & phát triển",
-    options: ["4.1. Giá trị cốt lõi", "4.2. Đào tạo", "4.3. Lộ trình phát triển", "4.4. Năng suất lao động"].map(label => ({ value: label, label })),
-  },
-];
-
-const KPI_GROUPS: IKpiGroup[] = [
-  {
-    label: "1. Kinh doanh",
+    label: "2. Khách hàng & MKT",
     options: [
-      { value: "1.1 Tổng doanh thu", label: "1.1 Tổng doanh thu" },
-      { value: "1.2 Doanh thu lẻ", label: "1.2 Doanh thu lẻ" },
-      { value: "1.3 Doanh thu sỉ", label: "1.3 Doanh thu sỉ" },
-      { value: "1.4 Doanh thu chéo", label: "1.4 Doanh thu chéo" },
-      { value: "1.5 Doanh thu góp", label: "1.5 Doanh thu góp" },
-      { value: "1.6 Số lượng xe bán lẻ", label: "1.6 Số lượng xe bán lẻ" },
-      { value: "1.7 Số lượng bán sỉ", label: "1.7 Số lượng bán sỉ" },
-      { value: "1.8 Tồn kho", label: "1.8 Tồn kho" },
-      { value: "1.9 Chi phí", label: "1.9 Chi phí" },
-    ],
+      "2.01 Số lượng Data khách",
+      "2.02 Tỉ lệ Data -> Mua hàng (BH)",
+      "2.03 Số lượng mua hàng từ MKT",
+      "2.04 DV-Số lượng khách hàng từ MKT nhắc",
+      "2.05 Chi phí quà/ xe bán lẻ",
+      "2.06 Hài lòng",
+      "2.07 Giới thiệu",
+      "2.08 NPS Bán hàng",
+      "2.09 NPS Dịch vụ",
+      "2.10 CSI Bán hàng",
+      "2.11 CSI Dịch vụ",
+      "2.12 CSAT",
+      "2.13 Chấm điểm định kỳ",
+      "2.13 Khen",
+      "2.14 Góp ý",
+      "2.15 Khiếu nại",
+    ].map(label => ({ value: label, label })),
   },
   {
-    label: "2. Trải nghiệm khách hàng",
+    label: "3. Vận hành & công nghệ",
     options: [
-      { value: "2.1 CSI", label: "2.1 CSI" },
-      { value: "2.2 NPS", label: "2.2 NPS" },
-      { value: "2.3 CSAT", label: "2.3 CSAT" },
-      { value: "2.4 Khen", label: "2.4 Khen" },
-      { value: "2.5 Góp ý", label: "2.5 Góp ý" },
-      { value: "2.6 Khiếu nại", label: "2.6 Khiếu nại" },
-    ],
-  },
-  {
-    label: "3. Vận hành",
-    options: [
-      { value: "3.1 Top công ty - bán hàng", label: "3.1 Top công ty - bán hàng" },
-      { value: "3.2 Hệ thống văn bản", label: "3.2 Hệ thống văn bản" },
-      { value: "3.3 Công nghệ", label: "3.3 Công nghệ" },
-    ],
+      "3.01 Hạng công ty",
+      "3.02 Hệ thống văn bản",
+      "3.03 Ứng dụng số hóa",
+      "3.04 Công nghệ 100% Lark vào công việc",
+      "3.05 Hệ thống báo cáo BI tự động, trực quan",
+      "3.06 E-learning",
+    ].map(label => ({ value: label, label })),
   },
   {
     label: "4. Con người & phát triển",
     options: [
-      { value: "4.1 Giá trị cốt lõi", label: "4.1 Giá trị cốt lõi" },
-      { value: "4.2 Đào tạo", label: "4.2 Đào tạo" },
-      { value: "4.3 Lộ trình phát triển", label: "4.3 Lộ trình phát triển" },
-      { value: "4.4 Năng suất lao động", label: "4.4 Năng suất lao động" },
-    ],
+      "4.01 ESI",
+      "4.02 Triển khai văn hóa",
+      "4.03 Báo cáo văn hóa",
+      "4.04 Số giờ đào tạo",
+      "4.05 Phòng đào tạo",
+      "4.07 MTCV, SĐTC",
+      "4.08 Lộ trình sự nghiệp",
+      "4.09 Tính năng suất lao động",
+    ].map(label => ({ value: label, label })),
   },
 ];
 
@@ -580,7 +572,7 @@ function App() {
               style={{ width: "100%" }}
               filter
             >
-              {(activeTab === "dichvu" ? SERVICE_KPI_GROUPS : KPI_GROUPS).map(g => (
+              {KPI_GROUPS.map(g => (
                 <Select.OptGroup key={g.label} label={g.label}>
                   {g.options.map(o => (
                     <Select.Option key={o.value} value={o.value}>{o.label}</Select.Option>
