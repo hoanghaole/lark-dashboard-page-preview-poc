@@ -25,6 +25,7 @@ const TAB_BI_URL: Record<string, string> = {
   hr: "https://app.powerbi.com/view?r=eyJrIjoiY2ZiOWE3OTMtNGI0OC00ZWNjLWE5MDAtZjFlMzRlNzhkYWQ1IiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
   ketoan: "https://app.powerbi.com/view?r=eyJrIjoiYTJmNDIxNmEtNzY0Yy00ZjQyLWE1MDAtOGFhYmNjMjNkY2MyIiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
   hethong: DEFAULT_BI_URL,
+  bonS: "https://app.powerbi.com/view?r=eyJrIjoiNDFmN2NkMWItNjRlNS00MDE0LWEzZWYtZDk0YjQ1NzQ3MzU4IiwidCI6ImM0YzU5OTA3LWJlOGItNGIyYS1iMjI2LTgyZmE5MjIzZDc0MiIsImMiOjEwfQ%3D%3D",
 };
 
 const DEFAULT_URL = (() => {
@@ -42,6 +43,7 @@ const MINUTES_API_URL = "/api/meeting-minutes";
 
 const TABS = [
   { key: "hethong", label: "Hệ thống", icon: <IconSetting />, color: "#5a6472" },
+  { key: "bonS", label: "4S", icon: <IconList />, color: "#0f766e" },
   { key: "kinhdoanh", label: "Kinh doanh", icon: <IconHome />, color: "#2f6fed" },
   { key: "dichvu", label: "Dịch vụ", icon: <IconServer />, color: "#f0722f" },
   { key: "cr", label: "CR", icon: <IconCustomerSupport />, color: "#7a5af8" },
