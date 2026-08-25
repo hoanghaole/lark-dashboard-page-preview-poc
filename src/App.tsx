@@ -20,7 +20,7 @@ const MKT_BI_URL = "https://app.powerbi.com/view?r=eyJrIjoiMzkxM2Q2ZTEtMTg0Yy00N
 const TAB_BI_URL: Record<string, string> = {
   kinhdoanh: "https://app.powerbi.com/view?r=eyJrIjoiNzkyMzE5MmMtZjkyYi00M2JjLTlhNTQtMzI2NTk0YWFjZDUxIiwidCI6ImM0YzU5OTA3LWJlOGItNGIyYS1iMjI2LTgyZmE5MjIzZDc0MiIsImMiOjEwfQ%3D%3D",
   dichvu: "https://app.powerbi.com/view?r=eyJrIjoiMmVkNmM4MzctMGNmNC00NDU4LThhODQtNmJmZWU0YmUyM2I5IiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
-  cr: "https://app.powerbi.com/view?r=eyJrIjoiY2MwNzkxMmEtMjE4Yy00OWVlLTgzZGMtNzZiYmU2MjlmNDJhIiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
+  cr: "https://app.powerbi.com/view?r=eyJrIjoiM2I3YWQ3NTUtYmU1ZC00MjJjLWJlNzAtODhiODA5MzgxNWJmIiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
   mkt: MKT_BI_URL,
   hr: "https://app.powerbi.com/view?r=eyJrIjoiY2ZiOWE3OTMtNGI0OC00ZWNjLWE5MDAtZjFlMzRlNzhkYWQ1IiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
   ketoan: "https://app.powerbi.com/view?r=eyJrIjoiYTJmNDIxNmEtNzY0Yy00ZjQyLWE1MDAtOGFhYmNjMjNkY2MyIiwidCI6ImIyYzE5ZjFmLTQyN2MtNDJhOC04OGJmLWVmODljZDc0YWNkYSIsImMiOjEwfQ%3D%3D",
