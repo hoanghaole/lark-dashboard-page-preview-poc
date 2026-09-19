@@ -9,12 +9,10 @@ const TABLE = {
   salary: "tbl94jXlgQY7Sll0",
   realtime: "tblH6T4xGMTqHvxL",
   praise: "tblPCUyek4SoS0pI",
-  culture: "tblaAXHmCLiftbSg",
 };
 
-const CULTURE_VALUES = ["Kết nối", "Tận tâm", "Sáng tạo", "Chính trực", "Tuân thủ", "Tin tưởng", "Niềm vui"];
 type Row = Record<string, unknown>;
-type PortalData = { targets: Row[]; salaries: Row[]; realtime: Row[]; praise: Row[]; culture: Row[] };
+type PortalData = { targets: Row[]; salaries: Row[]; realtime: Row[]; praise: Row[] };
 
 const text = (value: unknown): string => {
   if (value == null) return "";
@@ -74,11 +72,6 @@ const dateMonth = (value: unknown) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 };
 
-const cultureScore = (value: unknown) => {
-  const match = text(value).match(/[+-]?\s*(\d+(?:[.,]\d+)?)/);
-  return match ? Number(match[1].replace(",", ".")) : 0;
-};
-
 export default function SalesPortal() {
   const [data, setData] = useState<PortalData | null>(null);
   const [viewerIds, setViewerIds] = useState<string[]>([]);
@@ -102,14 +95,13 @@ export default function SalesPortal() {
     setRefreshing(true);
     setError("");
     try {
-      const [targets, salaries, realtime, praise, culture] = await Promise.all([
+      const [targets, salaries, realtime, praise] = await Promise.all([
         readTable(TABLE.target),
         readTable(TABLE.salary),
         readTable(TABLE.realtime),
         readTable(TABLE.praise),
-        readTable(TABLE.culture),
       ]);
-      setData({ targets, salaries, realtime, praise, culture });
+      setData({ targets, salaries, realtime, praise });
       try {
         const ids = await Promise.all([
           withTimeout(bitable.bridge.getBaseUserId(), 2500).catch(() => ""),
@@ -162,9 +154,13 @@ export default function SalesPortal() {
   const contributionProgress = contributionTarget > 0 ? Math.min(contributionRevenue / contributionTarget * 100, 100) : 0;
   const crossProgress = crossTarget > 0 ? Math.min(crossRevenue / crossTarget * 100, 100) : 0;
   const praiseRows = (data?.praise || []).filter((row) => text(row["Nhân viên bán hàng"]) === sales && dateMonth(row["Ngày gọi"] || row["Date Created"]) === month);
-  const culture = (data?.culture || []).find((row) => text(row["Text"]) === sales);
-  const cultureValues = CULTURE_VALUES.map((name) => ({ name, score: cultureScore(culture?.[name]) })).filter((item) => item.score > 0).sort((a, b) => b.score - a.score);
-  const cultureHighlight = cultureValues[0];
+  const praiseRanking = Object.entries((data?.praise || []).filter((row) => dateMonth(row["Ngày gọi"] || row["Date Created"]) === month).reduce<Record<string, number>>((counts, row) => {
+    const name = text(row["Nhân viên bán hàng"]);
+    if (name) counts[name] = (counts[name] || 0) + 1;
+    return counts;
+  }, {})).sort((a, b) => b[1] - a[1]);
+  const praiseLeader = praiseRanking[0];
+  const praiseGap = Math.max((praiseLeader?.[1] || 0) - praiseRows.length, 0);
   const income = number(salary?.["Thu nhập"]);
   const kpiRaw = number(salary?.["KPI %"]);
   const kpi = kpiRaw <= 1 ? kpiRaw * 100 : kpiRaw;
@@ -216,10 +212,10 @@ export default function SalesPortal() {
         </div>
       </section>
 
-      <section className="culture-card">
-        <div className="culture-mark">♥</div>
-        <div className="culture-copy"><span>Góc ghi nhận</span><strong>{praiseRows.length > 0 ? `${praiseRows.length} lời khen từ khách hàng trong tháng` : "Mỗi trải nghiệm tốt đều xây nên niềm tin"}</strong><p>{cultureHighlight ? `${cultureHighlight.name} đang là dấu ấn văn hóa nổi bật của bạn. Tiếp tục lan tỏa điều tốt đẹp trong từng lần phục vụ.` : "Doanh số là kết quả. Sự tin tưởng của khách hàng là giá trị ở lại."}</p></div>
-        {cultureValues.length > 0 && <div className="culture-tags">{cultureValues.slice(0, 3).map((item) => <span key={item.name}>{item.name} · +{item.score}</span>)}</div>}
+      <section className="praise-card">
+        <div className="praise-mark">♥</div>
+        <div className="praise-copy"><span>Lời khen khách hàng</span><strong>{praiseRows.length} lời khen trong tháng</strong><p>{praiseLeader ? (praiseGap === 0 ? `Bạn đang dẫn đầu cùng ${praiseLeader[1]} lời khen. Giữ vững chất lượng phục vụ!` : `Người dẫn đầu đang có ${praiseLeader[1]} lời khen. Thêm ${praiseGap} lời khen để bắt kịp.`) : "Chưa ghi nhận lời khen trong tháng này."}</p></div>
+        {praiseLeader && <div className="praise-leader"><span>Cao nhất tháng</span><strong>{praiseLeader[1]}</strong><small>{praiseLeader[0]}</small></div>}
       </section>
 
       <section className="details-grid">
