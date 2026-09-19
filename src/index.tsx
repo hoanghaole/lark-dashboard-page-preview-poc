@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
+import SalesPortal from './SalesPortal'
 import { initI18n } from './locales/i18n'
 import { bitable } from '@lark-base-open/js-sdk'
 import { Spin, LocaleProvider } from '@douyinfe/semi-ui'
@@ -12,6 +13,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
 
 function LoadApp() {
     const [load, setLoad] = useState(false);
+    const isSalesPortal = new URLSearchParams(window.location.search).get('mode') === 'sales';
     useEffect(() => {
         let cancelled = false;
         const done = () => { if (!cancelled) setLoad(true); };
@@ -30,7 +32,7 @@ function LoadApp() {
     if (load) {
         return (
             <LocaleProvider locale={vi_VN}>
-                <App />
+                {isSalesPortal ? <SalesPortal /> : <App />}
             </LocaleProvider>
         )
     }
