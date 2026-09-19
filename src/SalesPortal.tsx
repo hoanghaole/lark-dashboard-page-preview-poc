@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { bitable, dashboard } from "@lark-base-open/js-sdk";
 import "./SalesPortal.scss";
 
-const PILOT_OWNER_ID = "ou_8982cf041349064471ab7871db6173ae";
 const PILOT_MODE = new URLSearchParams(window.location.search).get("pilot") === "1";
 
 const TABLE = {
@@ -110,9 +109,9 @@ export default function SalesPortal() {
     return Array.isArray(users) && users.some((user) => viewerIds.includes(text((user as any)?.id)));
   }).map((row) => text(row["Sales"])), [monthTargets, viewerIds]);
   const allSales = useMemo(() => Array.from(new Set(monthTargets.map((row) => text(row["Sales"])).filter(Boolean))).sort(), [monthTargets]);
-  const isPilotOwner = PILOT_MODE && viewerIds.includes(PILOT_OWNER_ID);
-  const canChooseSales = isPilotOwner;
-  const sales = mappedSales.length === 1 ? mappedSales[0] : (isPilotOwner ? (selectedSales || allSales[0] || "") : "");
+  // ponytail: pilot URL grants admin preview; replace with a dedicated Admin user field before sharing it.
+  const canChooseSales = PILOT_MODE;
+  const sales = mappedSales.length === 1 ? mappedSales[0] : (PILOT_MODE ? (selectedSales || allSales[0] || "") : "");
 
   const targetRow = monthTargets.find((row) => text(row["Sales"]) === sales);
   const salary = data?.salaries.find((row) => text(row["Sales"]) === sales && text(row["Tháng"]) === month);
