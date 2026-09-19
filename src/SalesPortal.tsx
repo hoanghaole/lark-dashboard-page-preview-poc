@@ -8,10 +8,13 @@ const TABLE = {
   target: "tblYZ1oQHEdOvxat",
   salary: "tbl94jXlgQY7Sll0",
   realtime: "tblH6T4xGMTqHvxL",
+  praise: "tblPCUyek4SoS0pI",
+  culture: "tblaAXHmCLiftbSg",
 };
 
+const CULTURE_VALUES = ["Kết nối", "Tận tâm", "Sáng tạo", "Chính trực", "Tuân thủ", "Tin tưởng", "Niềm vui"];
 type Row = Record<string, unknown>;
-type PortalData = { targets: Row[]; salaries: Row[]; realtime: Row[] };
+type PortalData = { targets: Row[]; salaries: Row[]; realtime: Row[]; praise: Row[]; culture: Row[] };
 
 const text = (value: unknown): string => {
   if (value == null) return "";
@@ -57,8 +60,23 @@ const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> =>
 
 const parseDate = (value: unknown) => {
   const raw = text(value);
-  const match = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/);
-  return match ? new Date(`${match[3]}-${match[2]}-${match[1]}T${match[4]}:${match[5]}:${match[6]}+07:00`).getTime() : 0;
+  const match = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})(?:\s+(AM|PM))?$/i);
+  if (!match) return Date.parse(raw) || 0;
+  let hour = Number(match[4]);
+  if (match[7]) hour = (hour % 12) + (match[7].toUpperCase() === "PM" ? 12 : 0);
+  return new Date(`${match[3]}-${match[2]}-${match[1]}T${String(hour).padStart(2, "0")}:${match[5]}:${match[6]}+07:00`).getTime();
+};
+
+const dateMonth = (value: unknown) => {
+  const timestamp = parseDate(value);
+  if (!timestamp) return "";
+  const date = new Date(timestamp);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+};
+
+const cultureScore = (value: unknown) => {
+  const match = text(value).match(/[+-]?\s*(\d+(?:[.,]\d+)?)/);
+  return match ? Number(match[1].replace(",", ".")) : 0;
 };
 
 export default function SalesPortal() {
@@ -84,12 +102,14 @@ export default function SalesPortal() {
     setRefreshing(true);
     setError("");
     try {
-      const [targets, salaries, realtime] = await Promise.all([
+      const [targets, salaries, realtime, praise, culture] = await Promise.all([
         readTable(TABLE.target),
         readTable(TABLE.salary),
         readTable(TABLE.realtime),
+        readTable(TABLE.praise),
+        readTable(TABLE.culture),
       ]);
-      setData({ targets, salaries, realtime });
+      setData({ targets, salaries, realtime, praise, culture });
       try {
         const ids = await Promise.all([
           withTimeout(bitable.bridge.getBaseUserId(), 2500).catch(() => ""),
@@ -135,6 +155,16 @@ export default function SalesPortal() {
   const sold = Math.max(0, ...salesRows.map((row) => number(row["STT xe bán lũy kế"])));
   const remaining = Math.max(target - sold, 0);
   const progress = target > 0 ? Math.min((sold / target) * 100, 100) : 0;
+  const contributionRevenue = number(salary?.["Tổng doanh thu góp"]);
+  const crossRevenue = number(salary?.["Tổng doanh thu chéo"]);
+  const contributionTarget = number(targetRow?.["Mục tiêu doanh thu góp"]);
+  const crossTarget = number(targetRow?.["Mục tiêu doanh thu chéo"]);
+  const contributionProgress = contributionTarget > 0 ? Math.min(contributionRevenue / contributionTarget * 100, 100) : 0;
+  const crossProgress = crossTarget > 0 ? Math.min(crossRevenue / crossTarget * 100, 100) : 0;
+  const praiseRows = (data?.praise || []).filter((row) => text(row["Nhân viên bán hàng"]) === sales && dateMonth(row["Ngày gọi"] || row["Date Created"]) === month);
+  const culture = (data?.culture || []).find((row) => text(row["Text"]) === sales);
+  const cultureValues = CULTURE_VALUES.map((name) => ({ name, score: cultureScore(culture?.[name]) })).filter((item) => item.score > 0).sort((a, b) => b.score - a.score);
+  const cultureHighlight = cultureValues[0];
   const income = number(salary?.["Thu nhập"]);
   const kpiRaw = number(salary?.["KPI %"]);
   const kpi = kpiRaw <= 1 ? kpiRaw * 100 : kpiRaw;
@@ -170,6 +200,26 @@ export default function SalesPortal() {
           <article><span>Mục tiêu</span><strong>{target || "—"}</strong><small>xe</small></article>
           <article><span>Còn thiếu</span><strong>{target > 0 ? remaining : "—"}</strong><small>xe</small></article>
         </div>
+      </section>
+
+      <section className="revenue-section">
+        <div className="section-title"><div><span>Giá trị tạo thêm</span><strong>Không chỉ bán xe — cùng tạo giá trị trọn vẹn</strong></div></div>
+        <div className="revenue-grid">
+          {[
+            { label: "Doanh thu góp", value: contributionRevenue, target: contributionTarget, progress: contributionProgress, tone: "violet" },
+            { label: "Doanh thu chéo", value: crossRevenue, target: crossTarget, progress: crossProgress, tone: "orange" },
+          ].map((item) => <article className={item.tone} key={item.label}>
+            <span>{item.label}</span><strong>{money(item.value)}</strong>
+            <div className="revenue-meta"><small>{item.target > 0 ? `${Math.round(item.progress)}% mục tiêu` : "Chưa giao mục tiêu"}</small><b>{item.target > 0 ? money(item.target) : "—"}</b></div>
+            <div className="mini-track"><div style={{ width: `${item.progress}%` }}/></div>
+          </article>)}
+        </div>
+      </section>
+
+      <section className="culture-card">
+        <div className="culture-mark">♥</div>
+        <div className="culture-copy"><span>Góc ghi nhận</span><strong>{praiseRows.length > 0 ? `${praiseRows.length} lời khen từ khách hàng trong tháng` : "Mỗi trải nghiệm tốt đều xây nên niềm tin"}</strong><p>{cultureHighlight ? `${cultureHighlight.name} đang là dấu ấn văn hóa nổi bật của bạn. Tiếp tục lan tỏa điều tốt đẹp trong từng lần phục vụ.` : "Doanh số là kết quả. Sự tin tưởng của khách hàng là giá trị ở lại."}</p></div>
+        {cultureValues.length > 0 && <div className="culture-tags">{cultureValues.slice(0, 3).map((item) => <span key={item.name}>{item.name} · +{item.score}</span>)}</div>}
       </section>
 
       <section className="details-grid">

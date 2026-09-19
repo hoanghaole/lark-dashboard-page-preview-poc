@@ -40,7 +40,7 @@ $green: #16a34a;
 }
 .pilot-note { max-width: 960px; margin: 0 auto 14px; color: #9a6700; font-size: 12px; }
 
-.hero-card, .goal-card, .history-card, .details-grid, .milestone { max-width: 960px; margin-left: auto; margin-right: auto; }
+.hero-card, .goal-card, .history-card, .details-grid, .milestone, .revenue-section, .culture-card { max-width: 960px; margin-left: auto; margin-right: auto; }
 .hero-card {
   position: relative; overflow: hidden; display: flex; justify-content: space-between; align-items: center;
   padding: clamp(22px, 5vw, 38px); border-radius: 26px; color: #fff;
@@ -54,6 +54,15 @@ $green: #16a34a;
 .section-title { display: flex; align-items: center; justify-content: space-between; gap: 16px; div { display: grid; gap: 3px; } span { color: $muted; font-size: 13px; } strong { font-size: 18px; } b { color: $blue; font-size: 18px; } }
 .progress-track { height: 12px; overflow: hidden; margin: 18px 0; border-radius: 999px; background: #e7edf7; div { height: 100%; border-radius: inherit; background: linear-gradient(90deg, $blue, #38bdf8); transition: width .35s ease; } }
 .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; article { padding: 14px; border-radius: 16px; background: #f7f9fc; display: grid; gap: 2px; } span, small { color: $muted; font-size: 12px; } strong { font-size: 27px; } }
+
+.revenue-section { margin-top: 18px; padding: clamp(18px, 4vw, 28px); border-radius: 22px; background: #fff; box-shadow: 0 12px 40px #1e3a8a12; }
+.revenue-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 16px; article { padding: 18px; border-radius: 18px; display: grid; gap: 8px; } article.violet { color: #5b21b6; background: linear-gradient(135deg, #f5f3ff, #ede9fe); } article.orange { color: #9a3412; background: linear-gradient(135deg, #fff7ed, #ffedd5); } > article > span { font-size: 12px; font-weight: 700; } > article > strong { color: $ink; font-size: clamp(21px, 4vw, 29px); letter-spacing: -.03em; } }
+.revenue-meta { display: flex; justify-content: space-between; gap: 10px; color: $muted; small, b { font-size: 11px; } }
+.mini-track { height: 7px; overflow: hidden; border-radius: 999px; background: #ffffffb8; div { height: 100%; border-radius: inherit; background: currentColor; } }
+.culture-card { margin-top: 14px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; padding: 20px; border: 1px solid #dcfce7; border-radius: 22px; background: linear-gradient(135deg, #f0fdf4, #ecfeff); box-shadow: 0 12px 35px #16653412; }
+.culture-mark { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 16px; color: #fff; background: linear-gradient(135deg, #16a34a, #14b8a6); font-size: 22px; }
+.culture-copy { display: grid; gap: 3px; span { color: #15803d; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; } strong { font-size: 16px; } p { margin: 2px 0 0; color: $muted; font-size: 12px; line-height: 1.5; } }
+.culture-tags { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; max-width: 220px; span { padding: 6px 9px; border-radius: 999px; color: #166534; background: #fff; font-size: 10px; font-weight: 700; } }
 
 .details-grid { margin-top: 14px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; article { padding: 17px; border-radius: 18px; background: #fff; box-shadow: 0 10px 32px #1e3a8a10; display: grid; gap: 7px; } span { color: $muted; font-size: 12px; } strong { font-size: 18px; } }
 .milestone { margin-top: 14px; padding: 17px 20px; display: flex; align-items: center; gap: 13px; border-radius: 18px; color: #713f12; background: linear-gradient(135deg, #fef3c7, #fff7ed); span { font-size: 26px; } strong { font-size: 14px; } p { margin: 3px 0 0; font-size: 13px; } }
@@ -71,6 +80,9 @@ footer { max-width: 960px; margin: 22px auto 0; color: #8a94a6; text-align: cent
   .metric-grid article { padding: 11px; }
   .metric-grid strong { font-size: 23px; }
   .history-list article { align-items: flex-start; }
+  .revenue-grid { grid-template-columns: 1fr; }
+  .culture-card { grid-template-columns: auto 1fr; }
+  .culture-tags { grid-column: 1 / -1; justify-content: flex-start; max-width: none; }
 }
 
 .dashboard-save {
