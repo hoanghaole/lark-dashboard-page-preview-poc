@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { bitable, dashboard } from "@lark-base-open/js-sdk";
+import { bitable, dashboard, DashboardState } from "@lark-base-open/js-sdk";
 import "./SalesPortal.scss";
 
 const PILOT_MODE = new URLSearchParams(window.location.search).get("pilot") === "1";
@@ -68,6 +68,17 @@ export default function SalesPortal() {
   const [month, setMonth] = useState(monthNow());
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const isConfig = dashboard.state === DashboardState.Create || dashboard.state === DashboardState.Config;
+
+  const saveToDashboard = async () => {
+    setSaving(true);
+    try {
+      await dashboard.saveConfig({ customConfig: { mode: "sales", pilot: PILOT_MODE }, dataConditions: [] } as any);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const load = useCallback(async () => {
     setRefreshing(true);
@@ -181,6 +192,7 @@ export default function SalesPortal() {
         </div>
       </section>
       <footer>Dữ liệu lương tạm tính · Kết quả chính thức theo kỳ duyệt lương</footer>
+      {isConfig && <button className="dashboard-save" onClick={saveToDashboard} disabled={saving}>{saving ? "Đang thêm…" : "Thêm vào Dashboard"}</button>}
     </main>
   );
 }
