@@ -134,7 +134,7 @@ export default function SalesPortal() {
   const allSales = useMemo(() => Array.from(new Set(monthTargets.map((row) => text(row["Sales"])).filter(Boolean))).sort(), [monthTargets]);
   // ponytail: pilot URL grants admin preview; replace with a dedicated Admin user field before sharing it.
   const canChooseSales = PILOT_MODE;
-  const sales = mappedSales.length === 1 ? mappedSales[0] : (PILOT_MODE ? (selectedSales || allSales[0] || "") : "");
+  const sales = PILOT_MODE ? (selectedSales || allSales[0] || "") : (mappedSales.length === 1 ? mappedSales[0] : "");
 
   const targetRow = monthTargets.find((row) => text(row["Sales"]) === sales);
   const salary = data?.salaries.find((row) => text(row["Sales"]) === sales && text(row["Tháng"]) === month);
@@ -178,8 +178,8 @@ export default function SalesPortal() {
       </header>
 
       <div className="filters">
-        {canChooseSales && <label>Sales<select value={sales} onChange={(event) => setSelectedSales(event.target.value)}>{allSales.map((name) => <option key={name}>{name}</option>)}</select></label>}
-        <label>Tháng<select value={month} onChange={(event) => setMonth(event.target.value)}>{months.map((item) => <option key={item}>{item}</option>)}</select></label>
+        {canChooseSales && <label>Sales<select value={sales} onChange={(event) => setSelectedSales(event.target.value)}>{allSales.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>}
+        <label>Tháng<select value={month} onChange={(event) => { setMonth(event.target.value); setSelectedSales(""); }}>{months.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
       </div>
       {canChooseSales && <p className="pilot-note">Chế độ pilot của quản trị viên · dữ liệu Sales chưa mở cho toàn đội.</p>}
 
