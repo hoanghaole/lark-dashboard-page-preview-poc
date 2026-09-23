@@ -182,7 +182,7 @@ function App() {
   const [idsForm, setIdsForm] = useState({ meetingId: "", identify: "", discuss: "", solution: "", scope: "Công ty", status: "Mở" });
   const [idsActions, setIdsActions] = useState<IActionItem[]>([]);
   const [idsSaving, setIdsSaving] = useState(false);
-  const [minutes, setMinutes] = useState<{ title: string; meetingId: string; started: number; ended: number; duration: string; tabs: string; ids: { code: string; identify: string; discuss: string; solution: string; scope: string; status: string }[]; url?: string } | null>(null);
+  const [minutes, setMinutes] = useState<{ title: string; meetingId: string; started: number; ended: number; duration: string; tabs: string; ids: { code: string; identify: string; discuss: string; solution: string; scope: string; status: string }[]; actions: { action: string; person: string; deadline: string; sourceCode: string }[]; url?: string } | null>(null);
 
   const isCreate = dashboard.state === DashboardState.Create;
   const isConfig = dashboard.state === DashboardState.Config || isCreate;
@@ -439,6 +439,13 @@ function App() {
         <td>${escapeHtml(item.identify || "Chưa xác định")}</td><td>${escapeHtml(item.discuss || "Chưa xác định")}</td>
         <td>${escapeHtml(item.solution || "Chưa xác định")}</td><td>${escapeHtml(item.status || "Chưa xác định")}</td>
       </tr>`).join("") : '<tr><td colspan="6" class="empty">Chưa có IDS trong cuộc họp.</td></tr>';
+    const groupedActions = Object.entries(minutes.actions.reduce<Record<string, typeof minutes.actions>>((groups, action) => {
+      (groups[action.person || "Chưa phân công"] ||= []).push(action);
+      return groups;
+    }, {})).sort(([a], [b]) => a.localeCompare(b, "vi"));
+    const actionSections = groupedActions.length ? groupedActions.map(([person, actions]) => `
+      <div class="action-group"><div class="person">${escapeHtml(person)} <span>${actions.length} hành động</span></div>
+      <table class="actions"><thead><tr><th>STT</th><th>Hành động</th><th>Deadline</th><th>Nguồn IDS</th></tr></thead><tbody>${actions.map((action, index) => `<tr><td>${index + 1}</td><td>${escapeHtml(action.action)}</td><td>${escapeHtml(action.deadline || "Chưa xác định")}</td><td>${escapeHtml(action.sourceCode || "Chưa xác định")}</td></tr>`).join("")}</tbody></table></div>`).join("") : '<div class="empty-box">Chưa có hành động trong cuộc họp.</div>';
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(minutes.title)}</title>
       <style>
         @page { size: A4; margin: 1.7cm; } body { font-family: Arial, sans-serif; color: #1f2937; font-size: 11pt; line-height: 1.45; }
@@ -452,6 +459,10 @@ function App() {
         .ids td { vertical-align:top; padding:7px 5px; border:1px solid #d1d5db; word-wrap:break-word; }
         .ids tr:nth-child(even) td { background:#f8fafc; } .ids th:nth-child(1) { width:4%; } .ids th:nth-child(2) { width:15%; }
         .empty { text-align:center; color:#64748b; padding:18px !important; }
+        .action-group { margin: 0 0 16px; page-break-inside: avoid; } .person { background:#dbeafe; color:#17365d; font-weight:bold; padding:8px 10px; border-left:4px solid #2563eb; }
+        .person span { float:right; color:#64748b; font-size:8pt; font-weight:normal; } table.actions { width:100%; border-collapse:collapse; table-layout:fixed; font-size:9pt; }
+        .actions th { background:#eff6ff; color:#17365d; border:1px solid #bfdbfe; padding:6px; } .actions td { border:1px solid #d1d5db; padding:6px; vertical-align:top; }
+        .actions th:nth-child(1) { width:5%; } .actions th:nth-child(3) { width:18%; } .actions th:nth-child(4) { width:15%; } .empty-box { color:#64748b; padding:14px; background:#f8fafc; }
         .note { margin-top:18px; padding:10px 12px; background:#fff7ed; border-left:4px solid #f59e0b; color:#7c2d12; }
         .signatures { width:100%; margin-top:35px; text-align:center; } .signatures td { width:50%; padding:5px; } .space { height:65px; }
         .footer { margin-top:25px; text-align:center; color:#94a3b8; font-size:8pt; }
@@ -463,6 +474,7 @@ function App() {
         <tr><td class="label">Phạm vi theo dõi</td><td colspan="3">${escapeHtml(minutes.tabs || "Chưa xác định")}</td></tr>
       </table>
       <h2>2. Nội dung IDS và quyết định</h2><table class="ids"><thead><tr><th>STT</th><th>Mã / Phạm vi</th><th>Identify — Vấn đề</th><th>Discuss — Thảo luận</th><th>Solution — Giải pháp</th><th>Trạng thái</th></tr></thead><tbody>${rows}</tbody></table>
+      <h2>3. Kế hoạch hành động theo người thực hiện</h2>${actionSections}
       <div class="note"><b>Ghi chú:</b> Nội dung được tổng hợp từ dữ liệu IDS theo Meeting ID. Trường thiếu ghi “Chưa xác định”; không tự suy diễn quyết định.</div>
       <table class="signatures"><tr><td><b>NGƯỜI LẬP BIÊN BẢN</b></td><td><b>CHỦ TRÌ CUỘC HỌP</b></td></tr><tr><td class="space"></td><td class="space"></td></tr><tr><td>(Ký, ghi rõ họ tên)</td><td>(Ký, ghi rõ họ tên)</td></tr></table>
       <div class="footer">Xuất từ Lark Dashboard · ${escapeHtml(dateTime(Date.now()))}</div></body></html>`;
@@ -494,7 +506,22 @@ function App() {
         return Array.isArray(value) ? value.map(v => v?.text ?? v?.name ?? v).join(", ") : typeof value === "object" ? value?.text ?? value?.name ?? "" : String(value);
       };
       const ids = ((idsResult as any).records || []).filter((r: any) => field(r, "Meeting ID") === meeting.id).map((r: any) => ({ code: field(r, "Mã IDS"), identify: field(r, "Identify"), discuss: field(r, "Discuss"), solution: field(r, "Solution"), scope: field(r, "Phạm vi"), status: field(r, "Trạng thái") }));
-      const minutesData = { title: `Biên bản họp ${meeting.id}`, meetingId: meeting.id, started: meeting.started, ended, duration: fmt(elapsed), tabs, ids };
+      const sourceCodes = new Set(ids.map(item => item.code).filter(Boolean));
+      const actionTable = await bitable.base.getTableById(TABLE_ID_ACTIONS);
+      const actionMeta = await actionTable.getFieldMetaList();
+      const actionResult = await actionTable.getRecords({ pageSize: 200 } as any);
+      const actionField = (record: any, name: string) => {
+        const id = (actionMeta as any[]).find(f => f.name === name)?.id;
+        const value = record.fields?.[id] ?? record.fields?.[name] ?? "";
+        if (Array.isArray(value)) return value.map(v => v?.text ?? v?.name ?? v).join(", ");
+        if (typeof value === "object") return String(value?.text ?? value?.name ?? value?.value ?? "");
+        return String(value);
+      };
+      const actions = ((actionResult as any).records || []).map((record: any) => ({
+        action: actionField(record, "Hành động"), person: actionField(record, "Người phụ trách") || "Chưa phân công",
+        deadline: actionField(record, "Deadline"), sourceCode: actionField(record, "Mã nguồn"),
+      })).filter((item: any) => sourceCodes.has(item.sourceCode) && item.action);
+      const minutesData = { title: `Biên bản họp ${meeting.id}`, meetingId: meeting.id, started: meeting.started, ended, duration: fmt(elapsed), tabs, ids, actions };
       let url = "";
       try {
         const response = await fetch(MINUTES_API_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(minutesData) });
@@ -590,6 +617,9 @@ function App() {
           <p><b>Meeting ID:</b> {minutes.meetingId}</p><p><b>Bắt đầu:</b> {new Date(minutes.started).toLocaleString("vi-VN")}<br/><b>Kết thúc:</b> {new Date(minutes.ended).toLocaleString("vi-VN")}<br/><b>Thời lượng:</b> {minutes.duration}<br/><b>Chi tiết tab:</b> {minutes.tabs || "Chưa xác định"}</p>
           <Typography.Title heading={4}>IDS</Typography.Title>
           {minutes.ids.length ? minutes.ids.map((i, n) => <div key={`${i.code}-${n}`} className="record-card"><b>{i.code || "Chưa xác định"} · {i.scope || "Chưa xác định"}</b><p><b>Identify:</b> {i.identify || "Chưa xác định"}</p><p><b>Discuss:</b> {i.discuss || "Chưa xác định"}</p><p><b>Solution:</b> {i.solution || "Chưa xác định"}</p><p><b>Trạng thái:</b> {i.status || "Chưa xác định"}</p></div>) : <Typography.Text type="tertiary">Chưa có IDS trong cuộc họp.</Typography.Text>}
+          <Typography.Title heading={4}>Hành động theo người thực hiện</Typography.Title>
+          {Object.entries(minutes.actions.reduce<Record<string, typeof minutes.actions>>((groups, action) => { (groups[action.person || "Chưa phân công"] ||= []).push(action); return groups; }, {})).map(([person, actions]) => <div className="record-card" key={person}><b>{person}</b>{actions.map((action, index) => <p key={`${action.sourceCode}-${index}`}>{index + 1}. {action.action} · Deadline: {action.deadline || "Chưa xác định"} · {action.sourceCode || "Chưa xác định"}</p>)}</div>)}
+          {!minutes.actions.length && <Typography.Text type="tertiary">Chưa có hành động trong cuộc họp.</Typography.Text>}
           <Typography.Text type="tertiary">Bản này lấy dữ liệu IDS theo Meeting ID; trường thiếu ghi “Chưa xác định”.</Typography.Text>
         </>}
       </SideSheet>
