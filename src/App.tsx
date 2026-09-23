@@ -429,6 +429,51 @@ function App() {
     finally { setIdsSaving(false); }
   };
 
+  const exportMinutesDoc = () => {
+    if (!minutes) return;
+    const escapeHtml = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char] || char));
+    const dateTime = (value: number) => new Date(value).toLocaleString("vi-VN", { timeZone: "Asia/Bangkok" });
+    const rows = minutes.ids.length ? minutes.ids.map((item, index) => `
+      <tr>
+        <td>${index + 1}</td><td><b>${escapeHtml(item.code || "Chưa xác định")}</b><br>${escapeHtml(item.scope || "Chưa xác định")}</td>
+        <td>${escapeHtml(item.identify || "Chưa xác định")}</td><td>${escapeHtml(item.discuss || "Chưa xác định")}</td>
+        <td>${escapeHtml(item.solution || "Chưa xác định")}</td><td>${escapeHtml(item.status || "Chưa xác định")}</td>
+      </tr>`).join("") : '<tr><td colspan="6" class="empty">Chưa có IDS trong cuộc họp.</td></tr>';
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(minutes.title)}</title>
+      <style>
+        @page { size: A4; margin: 1.7cm; } body { font-family: Arial, sans-serif; color: #1f2937; font-size: 11pt; line-height: 1.45; }
+        .brand { color: #1d4ed8; font-size: 10pt; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
+        h1 { color: #17365d; text-align: center; font-size: 20pt; margin: 10px 0 4px; } .subtitle { text-align:center; color:#64748b; margin-bottom:22px; }
+        h2 { color: #17365d; font-size: 13pt; border-bottom: 2px solid #2563eb; padding-bottom: 5px; margin-top: 22px; }
+        .meta { width:100%; border-collapse:collapse; background:#eff6ff; } .meta td { border:1px solid #bfdbfe; padding:8px 10px; }
+        .meta .label { width:20%; font-weight:bold; color:#1e3a5f; }
+        table.ids { width:100%; border-collapse:collapse; table-layout:fixed; font-size:9pt; }
+        .ids th { background:#17365d; color:white; padding:8px 5px; border:1px solid #d1d5db; }
+        .ids td { vertical-align:top; padding:7px 5px; border:1px solid #d1d5db; word-wrap:break-word; }
+        .ids tr:nth-child(even) td { background:#f8fafc; } .ids th:nth-child(1) { width:4%; } .ids th:nth-child(2) { width:15%; }
+        .empty { text-align:center; color:#64748b; padding:18px !important; }
+        .note { margin-top:18px; padding:10px 12px; background:#fff7ed; border-left:4px solid #f59e0b; color:#7c2d12; }
+        .signatures { width:100%; margin-top:35px; text-align:center; } .signatures td { width:50%; padding:5px; } .space { height:65px; }
+        .footer { margin-top:25px; text-align:center; color:#94a3b8; font-size:8pt; }
+      </style></head><body>
+      <div class="brand">Khánh An Group</div><h1>BIÊN BẢN CUỘC HỌP</h1><div class="subtitle">${escapeHtml(minutes.meetingId)}</div>
+      <h2>1. Thông tin cuộc họp</h2><table class="meta">
+        <tr><td class="label">Bắt đầu</td><td>${escapeHtml(dateTime(minutes.started))}</td><td class="label">Kết thúc</td><td>${escapeHtml(dateTime(minutes.ended))}</td></tr>
+        <tr><td class="label">Thời lượng</td><td>${escapeHtml(minutes.duration)}</td><td class="label">Mã cuộc họp</td><td>${escapeHtml(minutes.meetingId)}</td></tr>
+        <tr><td class="label">Phạm vi theo dõi</td><td colspan="3">${escapeHtml(minutes.tabs || "Chưa xác định")}</td></tr>
+      </table>
+      <h2>2. Nội dung IDS và quyết định</h2><table class="ids"><thead><tr><th>STT</th><th>Mã / Phạm vi</th><th>Identify — Vấn đề</th><th>Discuss — Thảo luận</th><th>Solution — Giải pháp</th><th>Trạng thái</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="note"><b>Ghi chú:</b> Nội dung được tổng hợp từ dữ liệu IDS theo Meeting ID. Trường thiếu ghi “Chưa xác định”; không tự suy diễn quyết định.</div>
+      <table class="signatures"><tr><td><b>NGƯỜI LẬP BIÊN BẢN</b></td><td><b>CHỦ TRÌ CUỘC HỌP</b></td></tr><tr><td class="space"></td><td class="space"></td></tr><tr><td>(Ký, ghi rõ họ tên)</td><td>(Ký, ghi rõ họ tên)</td></tr></table>
+      <div class="footer">Xuất từ Lark Dashboard · ${escapeHtml(dateTime(Date.now()))}</div></body></html>`;
+    const blob = new Blob(["\ufeff", html], { type: "application/msword;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Bien-ban-${minutes.meetingId}.doc`;
+    document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(link.href);
+    Toast.success("Đã xuất file Word .doc");
+  };
+
   const finishMeeting = async () => {
     if (!meeting) return;
     const ended = Date.now();
@@ -539,7 +584,7 @@ function App() {
         <Button type="primary" theme="solid" className="btn" loading={idsSaving} onClick={saveIds} block>Lưu IDS</Button>
       </div>
       )}
-      <SideSheet visible={Boolean(minutes)} title={minutes?.title || "Biên bản họp"} width={760} onCancel={() => setMinutes(null)} footer={<Space><Button onClick={() => setMinutes(null)}>Đóng</Button>{minutes?.url ? <Button theme="solid" type="primary" onClick={() => window.open(minutes.url, "_blank", "noopener,noreferrer")}>Mở biên bản Lark Doc</Button> : null}</Space>}>
+      <SideSheet visible={Boolean(minutes)} title={minutes?.title || "Biên bản họp"} width={760} onCancel={() => setMinutes(null)} footer={<Space><Button onClick={() => setMinutes(null)}>Đóng</Button><Button onClick={exportMinutesDoc}>Xuất Word (.doc)</Button>{minutes?.url ? <Button theme="solid" type="primary" onClick={() => window.open(minutes.url, "_blank", "noopener,noreferrer")}>Mở biên bản Lark Doc</Button> : null}</Space>}>
         {minutes && <>
           <Typography.Title heading={4}>Thông tin cuộc họp</Typography.Title>
           <p><b>Meeting ID:</b> {minutes.meetingId}</p><p><b>Bắt đầu:</b> {new Date(minutes.started).toLocaleString("vi-VN")}<br/><b>Kết thúc:</b> {new Date(minutes.ended).toLocaleString("vi-VN")}<br/><b>Thời lượng:</b> {minutes.duration}<br/><b>Chi tiết tab:</b> {minutes.tabs || "Chưa xác định"}</p>
