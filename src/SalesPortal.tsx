@@ -9,10 +9,11 @@ const TABLE = {
   salary: "tbl94jXlgQY7Sll0",
   realtime: "tblH6T4xGMTqHvxL",
   praise: "tblPCUyek4SoS0pI",
+  recipients: "tblWKgCGjYi5TWR9",
 };
 
 type Row = Record<string, unknown>;
-type PortalData = { targets: Row[]; salaries: Row[]; realtime: Row[]; praise: Row[] };
+type PortalData = { targets: Row[]; salaries: Row[]; realtime: Row[]; praise: Row[]; recipients: Row[] };
 
 const text = (value: unknown): string => {
   if (value == null) return "";
@@ -95,13 +96,14 @@ export default function SalesPortal() {
     setRefreshing(true);
     setError("");
     try {
-      const [targets, salaries, realtime, praise] = await Promise.all([
+      const [targets, salaries, realtime, praise, recipients] = await Promise.all([
         readTable(TABLE.target),
         readTable(TABLE.salary),
         readTable(TABLE.realtime),
         readTable(TABLE.praise),
+        readTable(TABLE.recipients),
       ]);
-      setData({ targets, salaries, realtime, praise });
+      setData({ targets, salaries, realtime, praise, recipients });
       try {
         const ids = await Promise.all([
           withTimeout(bitable.bridge.getBaseUserId(), 2500).catch(() => ""),
@@ -127,14 +129,13 @@ export default function SalesPortal() {
   }, [data]);
 
   const monthTargets = useMemo(() => data?.targets.filter((row) => text(row["Tháng"]) === month) || [], [data, month]);
-  const mappedSales = useMemo(() => monthTargets.filter((row) => {
-    const users = row["Người dùng Lark"];
+  const mappedSales = useMemo(() => (data?.recipients || []).filter((row) => {
+    const users = row["người nhận"];
     return Array.isArray(users) && users.some((user) => viewerIds.includes(text((user as any)?.id)));
-  }).map((row) => text(row["Sales"])), [monthTargets, viewerIds]);
+  }).map((row) => text(row["id"])).filter((name) => monthTargets.some((target) => text(target["Sales"]) === name)), [data, monthTargets, viewerIds]);
   const allSales = useMemo(() => Array.from(new Set(monthTargets.map((row) => text(row["Sales"])).filter(Boolean))).sort(), [monthTargets]);
-  // ponytail: pilot URL grants admin preview; replace with a dedicated Admin user field before sharing it.
-  const canChooseSales = PILOT_MODE;
-  const sales = PILOT_MODE ? (selectedSales || allSales[0] || "") : (mappedSales.length === 1 ? mappedSales[0] : "");
+  const canChooseSales = mappedSales.length > 1;
+  const sales = mappedSales.includes(selectedSales) ? selectedSales : (mappedSales[0] || "");
 
   const targetRow = monthTargets.find((row) => text(row["Sales"]) === sales);
   const salary = data?.salaries.find((row) => text(row["Sales"]) === sales && text(row["Tháng"]) === month);
@@ -178,10 +179,10 @@ export default function SalesPortal() {
       </header>
 
       <div className="filters">
-        {canChooseSales && <label>Sales<select value={sales} onChange={(event) => setSelectedSales(event.target.value)}>{allSales.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>}
+        {canChooseSales && <label>Sales<select value={sales} onChange={(event) => setSelectedSales(event.target.value)}>{mappedSales.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>}
         <label>Tháng<select value={month} onChange={(event) => { setMonth(event.target.value); setSelectedSales(""); }}>{months.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
       </div>
-      {canChooseSales && <p className="pilot-note">Chế độ pilot của quản trị viên · dữ liệu Sales chưa mở cho toàn đội.</p>}
+      {canChooseSales && <p className="pilot-note">Quản trị viên · chỉ hiển thị Sales được gán trong bảng Người nhận.</p>}
 
       <section className="hero-card">
         <div className="hero-copy"><span>Thu nhập tạm tính</span><strong>{money(income)}</strong><small>KPI tháng: {kpi.toLocaleString("vi-VN")}%</small></div>
