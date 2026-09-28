@@ -506,7 +506,7 @@ function App() {
         return Array.isArray(value) ? value.map(v => v?.text ?? v?.name ?? v).join(", ") : typeof value === "object" ? value?.text ?? value?.name ?? "" : String(value);
       };
       const ids = ((idsResult as any).records || []).filter((r: any) => field(r, "Meeting ID") === meeting.id).map((r: any) => ({ code: field(r, "Mã IDS"), identify: field(r, "Identify"), discuss: field(r, "Discuss"), solution: field(r, "Solution"), scope: field(r, "Phạm vi"), status: field(r, "Trạng thái") }));
-      const sourceCodes = new Set(ids.map(item => item.code).filter(Boolean));
+      const sourceCodes = new Set(ids.map((item: { code: string }) => item.code).filter(Boolean));
       const actionTable = await bitable.base.getTableById(TABLE_ID_ACTIONS);
       const actionMeta = await actionTable.getFieldMetaList();
       const actionResult = await actionTable.getRecords({ pageSize: 200 } as any);
