@@ -1,5 +1,5 @@
 const LARK_API = "https://open.larksuite.com/open-apis";
-const FOLDER_TOKEN = "G8m4fC77GlrUNBdzKkSl3gHqgIh";
+const FOLDER_TOKEN = "SzxFfjE4SlRrvAdV9xnlVg6Ag0c";
 const ALLOWED_ORIGINS = new Set([
   "https://lark-dashboard-page-preview.vercel.app",
   "http://localhost:5173",
