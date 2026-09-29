@@ -168,7 +168,7 @@ function App() {
   const [saving, setSaving] = useState(false);
   const [fields, setFields] = useState<IFieldMeta[]>([]);
   const [activeTab, setActiveTab] = useState(TABS[0].key);
-  // Mount the active BI first, then preload one more tab at a time in the background.
+  // Only mount dashboards the user opens. Power BI iframes are expensive; background preloading caused severe lag.
   const [mountedTabs, setMountedTabs] = useState<Set<string>>(() => new Set([TABS[0].key]));
   // Track which iframes have finished loading (per tab) to hide spinner.
   const [loadedTabs, setLoadedTabs] = useState<Record<string, boolean>>({});
@@ -538,15 +538,6 @@ function App() {
   };
 
 
-  useEffect(() => {
-    const pending = TABS.filter(tab => !mountedTabs.has(tab.key));
-    if (!pending.length) return;
-    const timer = window.setTimeout(() => {
-      setMountedTabs(prev => new Set(prev).add(pending[0].key));
-    }, 1200);
-    return () => window.clearTimeout(timer);
-  }, [mountedTabs]);
-
   const selectTab = (key: string) => {
     setMountedTabs(prev => new Set(prev).add(key));
     setActiveTab(key);
@@ -587,6 +578,7 @@ function App() {
                 <iframe
                   className={`bi-frame ${loadedTabs[tab.key] ? "loaded" : ""}`}
                   src={url}
+                  loading="lazy"
                   title={`Dashboard ${tab.label}`}
                   onLoad={() => setLoadedTabs(prev => ({ ...prev, [tab.key]: true }))}
                 />
