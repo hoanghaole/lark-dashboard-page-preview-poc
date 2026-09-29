@@ -168,8 +168,8 @@ function App() {
   const [saving, setSaving] = useState(false);
   const [fields, setFields] = useState<IFieldMeta[]>([]);
   const [activeTab, setActiveTab] = useState(TABS[0].key);
-  // Only mount dashboards the user opens. Power BI iframes are expensive; background preloading caused severe lag.
-  const [mountedTabs, setMountedTabs] = useState<Set<string>>(() => new Set([TABS[0].key]));
+  // Power BI loads only after an explicit click; mounting it during app startup can block Base controls.
+  const [mountedTabs, setMountedTabs] = useState<Set<string>>(() => new Set());
   // Track which iframes have finished loading (per tab) to hide spinner.
   const [loadedTabs, setLoadedTabs] = useState<Record<string, boolean>>({});
   const [form, setForm] = useState<IFeedbackForm>(EMPTY_FORM);
