@@ -403,24 +403,28 @@ function App() {
     if (!idsForm.identify.trim()) { Toast.warning("Nhập vấn đề cần xử lý"); return; }
     setIdsSaving(true);
     try {
-      const table = await bitable.base.getTableById(TABLE_ID_IDS);
-      const meta = await table.getFieldMetaList();
+      const validActions = idsActions.filter(a => a.hanhDong.trim());
+      const [table, actionTable] = await Promise.all([
+        bitable.base.getTableById(TABLE_ID_IDS),
+        validActions.length ? bitable.base.getTableById(TABLE_ID_ACTIONS) : Promise.resolve(null),
+      ]);
+      const [meta, actionMeta] = await Promise.all([
+        table.getFieldMetaList(),
+        actionTable ? actionTable.getFieldMetaList() : Promise.resolve([]),
+      ]);
       const ids: Record<string, unknown> = {};
       const values: Record<string, unknown> = { "Meeting ID": idsForm.meetingId.trim() || (meeting?.id ?? ""), Identify: idsForm.identify.trim(), Discuss: idsForm.discuss.trim(), Solution: idsForm.solution.trim(), "Phạm vi": idsForm.scope, "Trạng thái": idsForm.status, "Mã IDS": `IDS-${Date.now()}`, "Ngày họp": Date.now() };
       for (const f of meta as any[]) if (values[f.name] !== undefined) ids[f.id] = values[f.name];
       await table.addRecord({ fields: ids } as any);
-      const validActions = idsActions.filter(a => a.hanhDong.trim());
-      if (validActions.length) {
-        const actionTable = await bitable.base.getTableById(TABLE_ID_ACTIONS);
-        const actionMeta = await actionTable.getFieldMetaList();
+      if (actionTable && validActions.length) {
         const byName = Object.fromEntries((actionMeta as any[]).map(f => [f.name, f.id]));
-        for (const action of validActions) {
+        await Promise.all(validActions.map(action => {
           const fields: Record<string, unknown> = {};
           const put = (name: string, value: unknown) => { if (byName[name] && value !== "") fields[byName[name]] = value; };
           put("Hành động", action.hanhDong.trim()); put("Người phụ trách", action.nguoi.trim()); put("Nguồn", "IDS"); put("Mã nguồn", values["Mã IDS"]);
           const deadline = new Date(action.deadline).getTime(); if (!isNaN(deadline)) put("Deadline", deadline);
-          await actionTable.addRecord({ fields } as any);
-        }
+          return actionTable.addRecord({ fields } as any);
+        }));
       }
       Toast.success("Đã lưu IDS");
       setIdsForm({ meetingId: meeting?.id ?? "", identify: "", discuss: "", solution: "", scope: activeLabel, status: "Mở" });
